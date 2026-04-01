@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1565C0">
+<title>ConsulTrack Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --navy:#1565C0;--navy2:#1976D2;
+  --bg:#F0F4FF;--white:#fff;
+  --text:#1a2744;--muted:#6b7e93;
+  --border:#c5d5ee;--shadow:0 2px 16px rgba(21,101,192,0.10);
+  --red:#D32F2F;--green:#2E7D32;--gold:#F57C00;
+  --r:14px;--r2:10px;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* PIN SCREEN */
+.pin-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;background:linear-gradient(160deg,#E3EEFF,#F0F4FF);}
+.pin-logo{font-size:1.8rem;font-weight:800;color:var(--navy);margin-bottom:4px;}
+.pin-logo span{color:var(--gold);}
+.pin-sub{font-size:0.8rem;color:var(--muted);margin-bottom:28px;}
+.pin-card{background:#fff;border:1px solid var(--border);border-radius:20px;
+  padding:24px 20px;width:100%;max-width:360px;box-shadow:var(--shadow);}
+.pin-card h2{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px;}
+.pin-card p{font-size:0.78rem;color:var(--muted);margin-bottom:16px;}
+.inp{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--r2);
+  font-family:'Inter',sans-serif;font-size:0.95rem;color:var(--text);outline:none;
+  background:#fff;transition:border-color 0.2s;}
+.inp:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,101,192,0.1);}
+.btn{display:block;width:100%;padding:12px;border:none;border-radius:var(--r2);
+  font-family:'Inter',sans-serif;font-size:0.92rem;font-weight:700;cursor:pointer;
+  transition:all 0.15s;margin-top:12px;}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;}
+.btn-green{background:#E8F5E9;color:var(--green);border:1px solid #C8E6C9;}
+.btn-red{background:#FFEBEE;color:var(--red);border:1px solid #FFCDD2;}
+.btn-wa{background:#25D366;color:#fff;border:none;}
+.btn-sm{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;
+  font-size:0.78rem;font-weight:700;cursor:pointer;border:none;transition:all 0.15s;}
+.err{color:var(--red);font-size:0.76rem;margin-top:8px;text-align:center;}
+.ok{color:var(--green);font-size:0.76rem;margin-top:8px;text-align:center;}
+
+/* ADMIN HEADER */
+.admin-hdr{background:linear-gradient(135deg,var(--navy),var(--navy2));
+  padding:16px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.admin-logo{font-size:1.1rem;font-weight:800;color:#fff;}
+.admin-logo span{color:#FFD54F;}
+.logout-btn{background:rgba(255,255,255,0.15);border:none;color:#fff;
+  padding:6px 14px;border-radius:20px;font-size:0.78rem;cursor:pointer;font-weight:600;}
+
+/* CONTENT */
+.admin-content{flex:1;overflow-y:auto;padding:16px;}
+.section-title{font-size:0.7rem;font-weight:800;color:var(--navy);text-transform:uppercase;
+  letter-spacing:0.8px;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--border);}
+
+/* REGISTRATION CARD */
+.reg-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.reg-card.approved{border-left:4px solid var(--green);}
+.reg-card.pending{border-left:4px solid var(--gold);}
+.reg-name{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:4px;}
+.reg-meta{font-size:0.78rem;color:var(--muted);margin-bottom:10px;line-height:1.6;}
+.reg-meta b{color:var(--text);}
+.code-display{background:var(--bg);border:1.5px dashed var(--navy);border-radius:var(--r2);
+  padding:10px 14px;text-align:center;margin-bottom:10px;}
+.code-val{font-size:1.4rem;font-weight:800;color:var(--navy);letter-spacing:4px;}
+.code-hint{font-size:0.68rem;color:var(--muted);margin-top:2px;}
+.reg-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.68rem;font-weight:700;}
+.sb-pending{background:#FFF8E1;color:#E65100;}
+.sb-approved{background:#E8F5E9;color:var(--green);}
+.sb-blocked{background:#FFEBEE;color:var(--red);}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:var(--r2);
+  padding:12px;text-align:center;box-shadow:var(--shadow);}
+.stat-val{font-size:1.4rem;font-weight:800;color:var(--navy);}
+.stat-lbl{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px;}
+
+/* FILTER */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;}
+.filter-row select{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r2);
+  font-size:0.85rem;color:var(--text);background:#fff;outline:none;}
+.refresh-btn{padding:8px 14px;background:var(--navy);color:#fff;border:none;
+  border-radius:var(--r2);font-size:0.82rem;font-weight:600;cursor:pointer;}
+
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+.empty{text-align:center;padding:32px;color:var(--muted);}
+.loading{text-align:center;padding:24px;color:var(--muted);}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);
+  background:var(--navy);color:#fff;padding:9px 20px;border-radius:30px;font-size:0.8rem;
+  font-weight:600;z-index:300;opacity:0;transition:all 0.3s;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div class="screen active" id="screen-pin">
+  <div class="pin-wrap">
+    <div class="pin-logo">ConsulTrack <span>Admin</span></div>
+    <div class="pin-sub">VKV Coder · Private Access Only</div>
+    <div class="pin-card">
+      <h2>🔐 Admin Login</h2>
+      <p>Enter your admin PIN to access the dashboard.</p>
+      <input type="password" class="inp" id="admin-pin" maxlength="6"
+        inputmode="numeric" placeholder="Enter PIN"
+        style="text-align:center;font-size:1.4rem;letter-spacing:8px;"
+        onkeydown="if(event.key==='Enter')checkAdminPin()">
+      <button class="btn btn-primary" onclick="checkAdminPin()">Enter Dashboard</button>
+      <div class="err" id="pin-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="screen" id="screen-admin">
+  <div class="admin-hdr">
+    <div class="admin-logo">ConsulTrack <span>Admin</span></div>
+    <button class="logout-btn" onclick="logout()">⎋ Logout</button>
+  </div>
+  <div class="admin-content">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="stat-total">—</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-pending" style="color:var(--gold)">—</div><div class="stat-lbl">Pending</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-approved" style="color:var(--green)">—</div><div class="stat-lbl">Approved</div></div>
+    </div>
+
+    <!-- Filter + Refresh -->
+    <div class="filter-row">
+      <select id="filter-status" onchange="renderList()">
+        <option value="all">All Registrations</option>
+        <option value="pending" selected>Pending Only</option>
+        <option value="approved">Approved Only</option>
+      </select>
+      <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    </div>
+
+    <div class="section-title" id="list-title">Pending Registrations</div>
+    <div id="reg-list"><div class="loading">Loading…</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — same Supabase project
+// ══════════════════════════════════════════════
+const SB_URL = 'https://jqqnnkzozjskziaizajg.supabase.co';
+const SB_KEY = 'sb_publishable_XDHJ55QPN6R9Hw8ikMerNQ_QNFX_z0P';
+const SCHEMA = 'consultrack';
+
+// ── CHANGE THIS PIN TO YOUR PREFERRED ADMIN PIN ──
+const ADMIN_PIN = '1234'; // Change this!
+
+let allPros = [];
+
+// ══════════════════════════════════════════════
+// PIN
+// ══════════════════════════════════════════════
+function checkAdminPin() {
+  const val = document.getElementById('admin-pin').value;
+  if (val === ADMIN_PIN) {
+    showScreen('screen-admin');
+    loadData();
+  } else {
+    document.getElementById('pin-err').textContent = 'Incorrect PIN';
+    document.getElementById('admin-pin').value = '';
+  }
+}
+
+function logout() {
+  showScreen('screen-pin');
+  document.getElementById('admin-pin').value = '';
+  document.getElementById('pin-err').textContent = '';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+// SUPABASE API
+// ══════════════════════════════════════════════
+async function sb(method, table, opts = {}) {
+  let url = `${SB_URL}/rest/v1/${table}`;
+  const headers = {
+    'apikey': SB_KEY,
+    'Authorization': `Bearer ${SB_KEY}`,
+    'Content-Type': 'application/json',
+    'Accept-Profile': SCHEMA,
+    'Content-Profile': SCHEMA,
+    'Prefer': method === 'PATCH' ? 'return=representation' : '',
+  };
+  const params = [];
+  if (opts.filter) params.push(opts.filter);
+  if (opts.order) params.push('order=' + opts.order);
+  if (params.length) url += '?' + params.join('&');
+  const res = await fetch(url, {
+    method, headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : [];
+}
+
+// ══════════════════════════════════════════════
+// LOAD DATA
+// ══════════════════════════════════════════════
+async function loadData() {
+  document.getElementById('reg-list').innerHTML = '<div class="loading">Loading…</div>';
+  try {
+    allPros = await sb('GET', 'professionals', { order: 'created_at.desc' });
+    updateStats();
+    renderList();
+  } catch(e) {
+    document.getElementById('reg-list').innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+function updateStats() {
+  const total = allPros.length;
+  const pending = allPros.filter(p => p.status === 'pending').length;
+  const approved = allPros.filter(p => p.status === 'approved').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-approved').textContent = approved;
+}
+
+function renderList() {
+  const filter = document.getElementById('filter-status').value;
+  let list = allPros;
+  if (filter !== 'all') list = allPros.filter(p => p.status === filter);
+  document.getElementById('list-title').textContent =
+    filter === 'pending' ? `Pending Registrations (${list.length})` :
+    filter === 'approved' ? `Approved Professionals (${list.length})` :
+    `All Registrations (${list.length})`;
+  if (!list.length) {
+    document.getElementById('reg-list').innerHTML =
+      `<div class="empty">No ${filter === 'all' ? '' : filter} registrations found</div>`;
+    return;
+  }
+  document.getElementById('reg-list').innerHTML = list.map(p => regCard(p)).join('');
+}
+
+// ══════════════════════════════════════════════
+// REGISTRATION CARD
+// ══════════════════════════════════════════════
+function regCard(p) {
+  const isApproved = p.status === 'approved';
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+  return `<div class="reg-card ${p.status}" id="card-${p.id}">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
+      <div class="reg-name">${p.name || '—'}</div>
+      <span class="status-badge sb-${p.status}">${p.status}</span>
+    </div>
+    <div class="reg-meta">
+      📱 <b>${p.mobile || '—'}</b> &nbsp;|&nbsp;
+      🏙 <b>${p.city || '—'}</b> &nbsp;|&nbsp;
+      💼 <b>${p.profession || '—'}</b><br>
+      🕐 ${fmtDate(p.created_at)}
+    </div>
+    ${isApproved ? `
+      <div class="code-display">
+        <div class="code-val">${p.access_code || '—'}</div>
+        <div class="code-hint">Access Code (already approved)</div>
+      </div>
+      <div class="reg-actions">
+        <button class="btn-sm btn-wa" onclick="sendWhatsApp('${p.mobile}','${p.access_code}','${p.name}')">📲 WhatsApp Code</button>
+        <button class="btn-sm btn-red" onclick="blockPro('${p.id}')">🚫 Block</button>
+      </div>
+    ` : `
+      <div class="code-display" id="codebox-${p.id}">
+        <div class="code-val" id="code-${p.id}">${generateCode(p.profession)}</div>
+        <div class="code-hint">Auto-generated code — tap 🔄 to regenerate</div>
+      </div>
+      <div class="reg-actions">
+        <button class="btn-sm" style="background:#E3F2FD;color:var(--navy);" onclick="regenCode('${p.id}','${p.profession}')">🔄 New Code</button>
+        <button class="btn-sm btn-green" onclick="approve('${p.id}')">✓ Approve</button>
+        <button class="btn-sm btn-red" onclick="blockPro('${p.id}')">✗ Reject</button>
+      </div>
+    `}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+// CODE GENERATION
+// ══════════════════════════════════════════════
+function generateCode(profession) {
+  // Prefix based on profession
+  let prefix = 'CT';
+  if (!profession) prefix = 'CT';
+  else {
+    const p = profession.toLowerCase();
+    if (p.includes('radio')) prefix = 'RD';
+    else if (p.includes('patho')) prefix = 'PT';
+    else if (p.includes('ca') || p.includes('account')) prefix = 'CA';
+    else if (p.includes('ortho')) prefix = 'OR';
+    else if (p.includes('cardio')) prefix = 'CD';
+    else if (p.includes('neuro')) prefix = 'NR';
+    else if (p.includes('onco')) prefix = 'OC';
+    else if (p.includes('surgeon') || p.includes('surgery')) prefix = 'SG';
+    else if (p.includes('general') || p.includes('physician')) prefix = 'GP';
+    else if (p.includes('lawyer') || p.includes('legal')) prefix = 'LG';
+    else prefix = p.substring(0, 2).toUpperCase();
+  }
+  // Random 4-char alphanumeric (no 0, O, I, 1 to avoid confusion)
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let rand = '';
+  for (let i = 0; i < 4; i++) rand += chars[Math.floor(Math.random() * chars.length)];
+  return `${prefix}-${rand}`;
+}
+
+function regenCode(id, profession) {
+  const el = document.getElementById('code-' + id);
+  if (el) el.textContent = generateCode(profession);
+}
+
+// ══════════════════════════════════════════════
+// APPROVE
+// ══════════════════════════════════════════════
+async function approve(id) {
+  const codeEl = document.getElementById('code-' + id);
+  const code = codeEl ? codeEl.textContent.trim() : generateCode('');
+  const pro = allPros.find(p => p.id === id);
+  if (!confirm(`Approve ${pro?.name}?\nAccess Code: ${code}\n\nThis will be sent to them via WhatsApp.`)) return;
+  try {
+    await sb('PATCH', `professionals?id=eq.${id}`, {
+      body: { status: 'approved', access_code: code }
+    });
+    toast('✓ Approved! Opening WhatsApp…');
+    // Update local data
+    const idx = allPros.findIndex(p => p.id === id);
+    if (idx > -1) { allPros[idx].status = 'approved'; allPros[idx].access_code = code; }
+    updateStats();
+    renderList();
+    // Open WhatsApp after short delay
+    setTimeout(() => sendWhatsApp(pro?.mobile, code, pro?.name), 800);
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
+}
+
+// ══════════════════════════════════════════════
+// BLOCK
+// ══════════════════════════════════════════════
+async function blockPro(id) {
+  const pro = allPros.find(p => p.id === id);
+  if (!confirm(`Block/reject ${pro?.name}?`)) return;
+  await sb('PATCH', `professionals?id=eq.${id}`, { body: { status: 'blocked' } });
+  const idx = allPros.findIndex(p => p.id === id);
+  if (idx > -1) allPros[idx].status = 'blocked';
+  updateStats(); renderList();
+  toast('Blocked');
+}
+
+// ══════════════════════════════════════════════
+// WHATSAPP
+// ══════════════════════════════════════════════
+function sendWhatsApp(mobile, code, name) {
+  if (!mobile || !code) return toast('No mobile or code');
+  // Format mobile — add 91 if not present
+  let num = mobile.replace(/\D/g, '');
+  if (num.length === 10) num = '91' + num;
+  const msg = `Hello ${name || 'Doctor'}! 👋\n\nYour *ConsulTrack* access has been approved.\n\n` +
+    `Your Access Code: *${code}*\n\n` +
+    `Open the app: https://vkv-coder.github.io/consultrack\n\n` +
+    `Steps:\n1. Click "Login →"\n2. Enter code: *${code}*\n3. Set your 4-digit PIN\n4. Start using the app!\n\n` +
+    `For support: vkvcoder.support@gmail.com\n\n_VKV Coder_`;
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// Enter key on PIN
+document.getElementById('admin-pin').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkAdminPin();
+});
+</script>
+</body>
+</html>
