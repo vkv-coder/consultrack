@@ -507,45 +507,77 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
 
 <!-- PRIVACY POLICY SCREEN -->
 <div class="screen" id="screen-privacy">
-  <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));padding:20px 18px;flex-shrink:0;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-      <button class="back-btn-light" onclick="hidePrivacy()">← Back</button>
+  <!-- Blue header matching Mera Hisaab -->
+  <div style="background:linear-gradient(135deg,#1565C0,#1976D2);padding:18px 20px;flex-shrink:0;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <button onclick="hidePrivacy()" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;font-weight:700;">← Privacy Policy</button>
     </div>
-    <div style="text-align:center;padding:10px 0;">
-      <div style="font-size:2.5rem;">🔒</div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:#fff;margin-top:6px;">Privacy Policy</div>
-      <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);margin-top:4px;">ConsulTrack by VKV Coder</div>
+    <div style="text-align:center;padding:10px 0 6px;">
+      <div style="font-size:2.8rem;">🔒</div>
+      <div style="font-size:1.2rem;font-weight:900;color:#fff;margin-top:8px;">Your Data. Your Control.</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.75);margin-top:4px;">ConsulTrack — Privacy Policy</div>
     </div>
   </div>
-  <div style="flex:1;overflow-y:auto;padding-bottom:20px;">
-    <div class="pp-section" style="margin-top:14px;">
-      <div class="pp-promise">
-        <div class="pp-promise-item">✅ We NEVER sell your data</div>
-        <div class="pp-promise-item">✅ We NEVER share your data with anyone</div>
-        <div class="pp-promise-item">✅ Only YOU can see your fee records</div>
-        <div class="pp-promise-item">✅ You can delete your data anytime</div>
+  <!-- Scrollable content -->
+  <div style="flex:1;overflow-y:auto;background:#f0f4ff;padding-bottom:24px;">
+
+    <!-- Our Promise -->
+    <div style="background:#fff;margin:12px;border-radius:14px;padding:16px;box-shadow:0 2px 12px rgba(21,101,192,0.08);border:1px solid #c5d5ee;">
+      <div style="font-size:0.72rem;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Our Promise to You</div>
+      <div style="background:#E8F5E9;border-radius:10px;padding:14px;">
+        <div style="font-size:0.88rem;font-weight:700;color:#2E7D32;margin-bottom:8px;">✅ We NEVER sell your data</div>
+        <div style="font-size:0.88rem;font-weight:700;color:#2E7D32;margin-bottom:8px;">✅ We NEVER share your data with anyone</div>
+        <div style="font-size:0.88rem;font-weight:700;color:#2E7D32;margin-bottom:8px;">✅ We NEVER show ads using your data</div>
+        <div style="font-size:0.88rem;font-weight:700;color:#2E7D32;">✅ You can delete your data anytime</div>
       </div>
     </div>
-    <div class="pp-section">
-      <h3>Data Storage &amp; Security</h3>
-      <p>Your professional fee data is stored on <strong>Supabase</strong> — a secure cloud database with bank-level encryption. Each user's data is completely isolated using Row Level Security. VKV Coder staff cannot view, access or process your personal fee records. Your data is never shared with any third party.</p>
+
+    <!-- Data Storage -->
+    <div style="background:#fff;margin:12px;border-radius:14px;padding:16px;box-shadow:0 2px 12px rgba(21,101,192,0.08);border:1px solid #c5d5ee;">
+      <div style="font-size:0.72rem;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Data Storage</div>
+      <p style="font-size:0.83rem;color:#546e7a;line-height:1.7;">Your professional fee data is stored with <strong>bank-level AES-256 encryption</strong> on Supabase servers located in <strong>Mumbai, India</strong>. Your data never leaves India.<br><br>Only you can access your data through your personal login. VKV Coder staff do not access, view or process your personal fee information.</p>
     </div>
-    <div class="pp-section">
-      <h3>What We Collect</h3>
-      <p>• Your name, mobile number, city and profession (for registration only)<br>• Fee entries you record (centres, tests, amounts, payments)<br>• Your self-set PIN (stored as a hash — we cannot read it)<br><br>We do NOT collect your location, contacts, photos, or any other device information.</p>
+
+    <!-- What We Store -->
+    <div style="background:#fff;margin:12px;border-radius:14px;padding:16px;box-shadow:0 2px 12px rgba(21,101,192,0.08);border:1px solid #c5d5ee;">
+      <div style="font-size:0.72rem;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">What We Store (On YOUR Behalf)</div>
+      <p style="font-size:0.83rem;color:#546e7a;line-height:1.7;">
+        • Your name and mobile — for access only<br>
+        • Fee data YOU enter — stored securely for YOUR access only<br>
+        • Your self-set PIN — stored as a hash, we cannot read it<br><br>
+        We do NOT collect, read or process your personal fee data. Your data is stored <strong>FOR YOU</strong>, not BY US.<br><br>
+        We do NOT collect your location, contacts, photos or any device information.
+      </p>
+      <div style="background:#E3F2FD;border-radius:10px;padding:12px;margin-top:10px;text-align:center;">
+        <span style="font-size:0.85rem;font-weight:700;color:#1565C0;">🔒 Think of us as a bank locker —<br>We hold it safely, but only YOU have the key!</span>
+      </div>
     </div>
-    <div class="pp-section">
-      <h3>Access Control</h3>
-      <p>Access to the app is controlled by a unique Access Code issued by VKV Coder. Each professional has their own isolated data space. No other user — including VKV Coder — can read your records.</p>
+
+    <!-- Your Rights -->
+    <div style="background:#fff;margin:12px;border-radius:14px;padding:16px;box-shadow:0 2px 12px rgba(21,101,192,0.08);border:1px solid #c5d5ee;">
+      <div style="font-size:0.72rem;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Your Rights</div>
+      <p style="font-size:0.83rem;color:#546e7a;line-height:1.7;">
+        • <strong>Access:</strong> All your data is visible in the app<br>
+        • <strong>Export:</strong> Download your data as Excel/PDF anytime<br>
+        • <strong>Delete:</strong> Request complete deletion anytime<br>
+        • <strong>Portability:</strong> Your data belongs to you<br><br>
+        For any support, queries or account deletion, contact:<br>
+        <a href="mailto:vkvcoder.support@gmail.com" style="color:#1565C0;font-weight:700;">vkvcoder.support@gmail.com</a>
+      </p>
     </div>
-    <div class="pp-section">
-      <h3>Data Deletion</h3>
-      <p>You may request complete deletion of your data at any time by contacting us at <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--navy);font-weight:600;">vkvcoder.support@gmail.com</a>. We will delete all your records within 7 working days.</p>
+
+    <!-- Security -->
+    <div style="background:#fff;margin:12px;border-radius:14px;padding:16px;box-shadow:0 2px 12px rgba(21,101,192,0.08);border:1px solid #c5d5ee;">
+      <div style="font-size:0.72rem;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Security</div>
+      <p style="font-size:0.83rem;color:#546e7a;line-height:1.7;">
+        • AES-256 encryption at rest<br>
+        • TLS 1.3 encryption in transit<br>
+        • Row Level Security — each user sees only their own data<br>
+        • No third party analytics or tracking
+      </p>
+      <div style="font-size:0.72rem;color:#90a4ae;margin-top:10px;text-align:right;">Last updated: April 2026</div>
     </div>
-    <div class="pp-section">
-      <h3>Contact &amp; Support</h3>
-      <p>For any questions, support or data requests:<br><strong>Email:</strong> <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--navy);font-weight:600;">vkvcoder.support@gmail.com</a><br><strong>App:</strong> ConsulTrack by VKV Coder<br><strong>Last updated:</strong> April 2026</p>
-    </div>
+
   </div>
 </div>
 
