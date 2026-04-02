@@ -634,7 +634,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
 <script>
 // ══════════════════════════════════
 const SB_URL='https://jqqnnkzozjskziaizajg.supabase.co';
-const SB_KEY='sb_publishable_XDHJ55QPN6R9Hw8ikMerNQ_QNFX_z0P';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 const SCHEMA='consultrack';
 
 let pro=null;
@@ -646,7 +646,15 @@ let prevScreen='screen-app';
 // ── API ──
 async function sb(method,table,opts={}){
   let url=`${SB_URL}/rest/v1/${table}`;
-  const h={'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Accept-Profile':SCHEMA,'Content-Profile':SCHEMA,'Prefer':method==='POST'?'return=representation':method==='PATCH'?'return=representation':''};
+  const h={
+    'apikey':SB_KEY,
+    'Authorization':`Bearer ${SB_KEY}`,
+    'Content-Type':'application/json',
+    'Accept-Profile':SCHEMA,
+    'Content-Profile':SCHEMA,
+    'Prefer':method==='POST'?'return=representation':method==='PATCH'?'return=representation':'',
+    'X-Client-Info':'consultrack/1.0'
+  };
   const p=[];if(opts.filter)p.push(opts.filter);if(opts.order)p.push('order='+opts.order);
   if(p.length)url+='?'+p.join('&');
   const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined});
@@ -731,15 +739,13 @@ async function syncAll(){
   setSyncBadge('busy');
   try{
     const pid=pro.id,f='pro_id=eq.'+pid;
-    const[c,sv,v,vl]=await Promise.all([
-      sb('GET','centres',{filter:f,order:'name.asc'}),
-      sb('GET','subservices',{filter:f,order:'service_name.asc,name.asc'}),
-      sb('GET','visits',{filter:f,order:'visit_date.desc'}),
-      sb('GET','visit_lines',{filter:'pro_id=eq.'+pid,order:'created_at.asc'}),
-    ]);
+    const c  = await sb('GET','centres',{filter:f,order:'name.asc'});
+    const sv = await sb('GET','subservices',{filter:f,order:'service_name.asc,name.asc'});
+    const v  = await sb('GET','visits',{filter:f,order:'visit_date.desc'});
+    const vl = await sb('GET','visit_lines',{filter:'pro_id=eq.'+pid,order:'created_at.asc'});
     DB.centres=c||[];DB.services=sv||[];DB.visits=v||[];DB.visitLines=vl||[];
     setSyncBadge('ok');refreshAll();
-  }catch(e){setSyncBadge('err');toast('Sync failed: '+e.message);}
+  }catch(e){setSyncBadge('err');toast('Sync failed: '+e.message);console.error('Sync error:',e);}
 }
 
 // ── HELPERS ──
