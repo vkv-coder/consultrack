@@ -519,13 +519,9 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
         <div class="card-title">Centres / Clinics</div>
         <div class="master-row">
           <div class="fg"><label>Centre Name</label><input type="text" id="nc-name" placeholder="e.g. Agilus Diagnostics"></div>
-          <div class="fg"><label>Mobile</label><input type="tel" id="nc-phone" placeholder="9876543210"></div>
+          <div class="fg"><label>Mobile (= WhatsApp)</label><input type="tel" id="nc-phone" placeholder="9876543210" maxlength="10"></div>
           <div class="fg"><label>Email</label><input type="email" id="nc-email" placeholder="billing@centre.com"></div>
           <button class="add-btn" onclick="addCentre()">+ Add</button>
-        </div>
-        <div class="fg" style="margin-top:-4px;margin-bottom:10px;">
-          <label>WhatsApp No. (with country code)</label>
-          <input type="tel" id="nc-wa" placeholder="919876543210">
         </div>
         <div id="centres-list"></div>
       </div>
@@ -1306,10 +1302,11 @@ async function addCentre(){
   const name=document.getElementById('nc-name').value.trim();
   const phone=document.getElementById('nc-phone').value.trim();
   const email=document.getElementById('nc-email').value.trim();
-  const wa=document.getElementById('nc-wa').value.trim();
   if(!name)return toast('Enter centre name');
-  await sb('POST','centres',{body:{pro_id:pro.id,name,phone:phone||null,email:email||null,whatsapp_number:wa||null}});
-  ['nc-name','nc-phone','nc-email','nc-wa'].forEach(id=>document.getElementById(id).value='');
+  // Auto-add 91 for WhatsApp
+  const wa=phone?'91'+phone.replace(/\D/g,'').slice(-10):null;
+  await sb('POST','centres',{body:{pro_id:pro.id,name,phone:phone||null,email:email||null,whatsapp_number:wa}});
+  ['nc-name','nc-phone','nc-email'].forEach(id=>document.getElementById(id).value='');
   toast('Centre added ✓');await syncAll();
 }
 async function delCentre(id){if(!confirm('Delete?'))return;await sb('DELETE','centres?id=eq.'+id);toast('Deleted');await syncAll();}
