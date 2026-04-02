@@ -457,18 +457,12 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
 
     <!-- VISITS -->
     <div id="tab-visits" class="page">
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <select id="vf-centre" onchange="renderVisits()" style="flex:1;padding:9px 11px;font-size:0.85rem;"><option value="">All Centres</option></select>
-        <select id="vf-status" onchange="renderVisits()" style="flex:1;padding:9px 11px;font-size:0.85rem;">
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="partial">Partial</option>
-          <option value="paid">Paid</option>
-        </select>
+      <div style="text-align:center;padding:40px 20px 20px;">
+        <div style="font-size:3rem;margin-bottom:12px;">📋</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--navy);margin-bottom:8px;">Record a New Visit</div>
+        <div style="font-size:0.85rem;color:var(--muted);margin-bottom:28px;line-height:1.6;">Tap the <b>＋</b> button below to add a visit.<br>All saved visits are in the <b>Report</b> tab.</div>
+        <button onclick="openNewVisit()" style="background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border:none;border-radius:var(--r2);padding:14px 32px;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">＋ Add New Visit</button>
       </div>
-      <div id="visits-list"></div>
-      <!-- FAB only on visits -->
-      <div style="height:64px;"></div>
     </div>
 
     <!-- REPORT -->
@@ -880,12 +874,15 @@ function visitCard(v){
 // ── VISITS ──
 function renderVisits(){
   const centre=document.getElementById('vf-centre').value;
-  const status=document.getElementById('vf-status').value;
-  let list=[...DB.visits];
+  // Only show pending/partial — paid visits visible in Report
+  let list=DB.visits.filter(v=>v.status!=='paid');
   if(centre)list=list.filter(v=>v.centre_name===centre);
-  if(status)list=list.filter(v=>v.status===status);
-  document.getElementById('visits-list').innerHTML=list.length?list.map(visitCard).join(''):
-    '<div class="empty"><div class="empty-icon">📋</div><p>No visits found</p></div>';
+  const el=document.getElementById('visits-list');
+  if(!list.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><p style="font-weight:700;color:var(--green);margin-bottom:6px;">All visits settled!</p><p style="font-size:0.82rem;color:var(--muted);">View past visits in Report tab</p></div>';
+    return;
+  }
+  el.innerHTML=list.map(visitCard).join('');
 }
 
 // ── NEW VISIT ──
@@ -1046,27 +1043,28 @@ async function savePayment(){
 // ── DUES ──
 function renderDues(){
   const el=document.getElementById('dues-content');
-  // Group by centre
-  const centres=[...new Set(DB.visits.map(v=>v.centre_name))].sort();
-  if(!centres.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎉</div><p>No visits yet</p></div>';return;}
+  // Only unpaid/partial visits
+  const unpaidVisits=DB.visits.filter(v=>v.status!=='paid');
+  const centres=[...new Set(unpaidVisits.map(v=>v.centre_name))].sort();
+  if(!centres.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">🎉</div><p style="font-weight:700;color:var(--green);">No pending dues!</p><p style="font-size:0.82rem;color:var(--muted);margin-top:6px;">All payments received</p></div>';
+    return;
+  }
   el.innerHTML=centres.map(cname=>{
-    const cVisits=DB.visits.filter(v=>v.centre_name===cname).sort((a,b)=>b.visit_date.localeCompare(a.visit_date));
-    const totalDue=cVisits.reduce((a,v)=>(v.total_amount||0)-(v.received||0)+a,0);
+    const cVisits=unpaidVisits.filter(v=>v.centre_name===cname).sort((a,b)=>b.visit_date.localeCompare(a.visit_date));
+    const totalDue=cVisits.reduce((a,v)=>a+(v.total_amount||0)-(v.received||0),0);
     return`<div class="dues-card">
-      <div class="dues-centre">${cname} <span style="font-size:0.8rem;font-weight:500;color:${totalDue>0?'var(--red)':'var(--green)'};">${totalDue>0?'Due '+inr(totalDue):'✓ Settled'}</span></div>
+      <div class="dues-centre">${cname} <span style="font-size:0.82rem;font-weight:700;color:var(--red);">Due ${inr(totalDue)}</span></div>
       ${cVisits.map(v=>{
         const due=(v.total_amount||0)-(v.received||0);
         return`<div class="dues-row" id="drow-${v.id}">
           <div>
             <div class="dues-date">${fmtDate(v.visit_date)}</div>
-            <div style="font-size:0.73rem;color:var(--muted)">${linesFor(v.id).length} service(s)</div>
+            <div style="font-size:0.73rem;color:var(--muted)">${linesFor(v.id).length} service(s) · Total ${inr(v.total_amount)}</div>
           </div>
           <div class="dues-right">
-            <div class="dues-amt">${inr(v.total_amount)}</div>
-            <button class="paid-toggle ${v.status==='paid'?'pt-paid':'pt-unpaid'}"
-              onclick="toggleDuesPaid('${v.id}',${v.status==='paid'})">
-              ${v.status==='paid'?'✓ Paid':'Mark Paid'}
-            </button>
+            <div class="dues-amt" style="color:var(--red);font-weight:700;">${inr(due)}</div>
+            <button class="paid-toggle pt-unpaid" onclick="toggleDuesPaid('${v.id}',false)">Mark Paid</button>
           </div>
         </div>
         <div class="pay-inline" id="pay-inline-${v.id}">
