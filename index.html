@@ -277,18 +277,27 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
 <div class="screen active" id="screen-register">
   <div class="setup-wrap">
     <div class="setup-logo">Consult<span>Track</span></div>
-    <div class="setup-sub">Professional Fee Tracker · Request Access</div>
+    <div class="setup-sub">Professional Fee Tracker</div>
+    <!-- Spot counter banner -->
+    <div id="spot-banner" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:12px;padding:10px 18px;margin-bottom:16px;text-align:center;width:100%;max-width:420px;display:none;">
+      <div style="font-size:0.88rem;font-weight:800;color:#fff;" id="spot-text">🎉 First 25 doctors FREE lifetime!</div>
+    </div>
     <div class="setup-card">
-      <h2>New Registration</h2>
-      <p>Fill your details. You'll receive an Access Code once approved.</p>
+      <h2>🎉 First 25 Doctors — FREE Lifetime!</h2>
+      <p>No charges, no trial limits for first 25 doctors. Start instantly after registration.</p>
       <div class="fg"><label>Full Name</label><input type="text" id="reg-name" placeholder="Dr. Sharma"></div>
-      <div class="fg"><label>Mobile Number</label><input type="tel" id="reg-mobile" placeholder="9876543210"></div>
+      <div class="fg"><label>Mobile Number</label><input type="tel" id="reg-mobile" placeholder="9876543210" maxlength="10"></div>
       <div class="fg"><label>City</label><input type="text" id="reg-city" placeholder="Vadodara"></div>
       <div class="fg"><label>Profession</label><input type="text" id="reg-prof" placeholder="Radiologist / Pathologist / CA…"></div>
-      <button class="btn btn-primary" onclick="submitReg()">Send Registration Request</button>
+      <button class="btn btn-primary" id="reg-btn" onclick="submitReg()">Start Free →</button>
       <div class="err-msg err-red" id="reg-err"></div>
       <div class="divider"></div>
-      <p style="text-align:center;">Have an access code? <span style="color:var(--navy);cursor:pointer;font-weight:700;" onclick="showLogin()">Login →</span></p>
+      <p style="text-align:center;">Already registered? <span style="color:var(--navy);cursor:pointer;font-weight:700;" onclick="showLogin()">Login →</span></p>
+      <div style="text-align:center;margin-top:10px;">
+        <span style="font-size:0.75rem;color:var(--muted);cursor:pointer;" onclick="showOverlayScreen('screen-privacy')">🔒 Privacy Policy</span>
+        &nbsp;·&nbsp;
+        <a href="mailto:vkvcoder.support@gmail.com" style="font-size:0.75rem;color:var(--muted);">Support</a>
+      </div>
     </div>
   </div>
 </div>
@@ -300,10 +309,10 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
     <div class="setup-sub">Enter your credentials</div>
     <div class="setup-card">
       <div id="login-s1">
-        <h2>Enter Access Code</h2>
-        <p>Enter the code sent to you by VKV Coder support.</p>
-        <div class="fg"><input type="text" id="login-code" placeholder="RD-7X4K" style="text-transform:uppercase;letter-spacing:3px;font-size:1.2rem;font-weight:700;text-align:center;"></div>
-        <button class="btn btn-primary" onclick="verifyCode()">Continue →</button>
+        <h2>Login with Mobile</h2>
+        <p>Enter your registered mobile number to continue.</p>
+        <div class="fg"><label>Mobile Number</label><input type="tel" id="login-mobile" placeholder="9876543210" maxlength="10" style="font-size:1.2rem;font-weight:700;text-align:center;letter-spacing:2px;"></div>
+        <button class="btn btn-primary" onclick="verifyMobile()">Continue →</button>
         <div class="err-msg err-red" id="login-err"></div>
       </div>
       <div id="login-s2" style="display:none;">
@@ -670,11 +679,38 @@ function showOverlayScreen(id){prevScreen=document.querySelector('.screen.active
 function hideOverlayScreen(){showScreen(prevScreen);}
 
 // ── INIT ──
-window.onload=()=>{
+window.onload=async()=>{
   const s=localStorage.getItem('ct_session');
-  if(s){pro=JSON.parse(s).pro;document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');}
-  else showScreen('screen-register');
+  if(s){
+    pro=JSON.parse(s).pro;
+    document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;
+    showScreen('screen-pin');
+  } else {
+    showScreen('screen-register');
+    loadSpotCount();
+  }
 };
+
+// ── SPOT COUNTER ──
+async function loadSpotCount(){
+  try{
+    const rows=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)'});
+    const count=rows?rows.length:0;
+    const remaining=25-count;
+    const banner=document.getElementById('spot-banner');
+    const spotText=document.getElementById('spot-text');
+    if(remaining<=10&&remaining>0){
+      banner.style.display='block';
+      spotText.textContent='🔥 Only '+remaining+' of 25 FREE spots remaining!';
+    } else if(remaining<=0){
+      // Waitlist mode
+      document.getElementById('reg-btn').textContent='Join Waitlist →';
+      document.getElementById('reg-btn').onclick=submitWaitlist;
+      document.querySelector('.setup-card h2').textContent='Join Waitlist';
+      document.querySelector('.setup-card p').textContent='All 25 free spots are taken. Join the waitlist and we will contact you when next batch opens.';
+    }
+  }catch(e){console.log('Spot count error:',e);}
+}
 
 // ── REGISTER ──
 async function submitReg(){
@@ -684,23 +720,68 @@ async function submitReg(){
   const profession=document.getElementById('reg-prof').value.trim();
   const e=document.getElementById('reg-err');e.className='err-msg err-red';e.textContent='';
   if(!name||!mobile)return(e.textContent='Name and mobile required.');
-  try{e.textContent='Sending…';
-    await sb('POST','professionals',{body:{name,mobile,city,profession,status:'pending'}});
-    e.className='err-msg err-green';e.textContent='✓ Request sent! You will be contacted once approved.';
+  if(mobile.length!==10||!/^\d{10}$/.test(mobile))return(e.textContent='Enter valid 10 digit mobile number.');
+  try{
+    e.textContent='Registering…';
+    // Check if mobile already registered
+    const existing=await sb('GET','professionals',{filter:'mobile=eq.'+mobile});
+    if(existing&&existing.length){
+      e.className='err-msg err-green';
+      e.textContent='Mobile already registered! Please login.';
+      setTimeout(()=>{showLogin();document.getElementById('login-mobile').value=mobile;},1500);
+      return;
+    }
+    // Check spot count
+    const active=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)'});
+    const count=active?active.length:0;
+    if(count>=25){submitWaitlist();return;}
+    // Register and auto-approve
+    const now=new Date().toISOString();
+    const res=await sb('POST','professionals',{body:{name,mobile,city,profession,status:'trial',trial_started_at:now,last_activity_at:now,is_waitlist:false}});
+    pro=res[0];
+    e.className='err-msg err-green';e.textContent='✓ Registered! Setting up your PIN…';
+    setTimeout(()=>{
+      document.getElementById('login-s1').style.display='none';
+      document.getElementById('login-s2').style.display='block';
+      showScreen('screen-login');
+    },1000);
   }catch(err){e.textContent='Error: '+err.message;}
 }
 
-// ── LOGIN ──
-async function verifyCode(){
-  const code=document.getElementById('login-code').value.trim().toUpperCase();
+// ── WAITLIST ──
+async function submitWaitlist(){
+  const name=document.getElementById('reg-name').value.trim();
+  const mobile=document.getElementById('reg-mobile').value.trim();
+  const city=document.getElementById('reg-city').value.trim();
+  const profession=document.getElementById('reg-prof').value.trim();
+  const e=document.getElementById('reg-err');e.className='err-msg err-red';e.textContent='';
+  if(!name||!mobile)return(e.textContent='Name and mobile required.');
+  try{
+    e.textContent='Adding to waitlist…';
+    await sb('POST','professionals',{body:{name,mobile,city,profession,status:'waitlist',is_waitlist:true}});
+    e.className='err-msg err-green';
+    e.textContent='✓ Added to waitlist! We will contact you when next batch opens.';
+  }catch(err){e.textContent='Error: '+err.message;}
+}
+
+// ── LOGIN — Mobile based ──
+async function verifyMobile(){
+  const mobile=document.getElementById('login-mobile').value.trim();
   const e=document.getElementById('login-err');e.textContent='';
-  if(!code)return(e.textContent='Enter access code');
-  try{e.textContent='Verifying…';
-    const rows=await sb('GET','professionals',{filter:'access_code=eq.'+code+'&status=eq.approved'});
-    if(!rows||!rows.length)return(e.textContent='Invalid or unapproved code.');
+  if(!mobile||mobile.length!==10)return(e.textContent='Enter valid 10 digit mobile number.');
+  try{
+    e.textContent='Verifying…';
+    const rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)'});
+    if(!rows||!rows.length)return(e.textContent='Mobile not registered or access blocked. Please register first.');
     pro=rows[0];
-    if(pro.pin_hash){localStorage.setItem('ct_session',JSON.stringify({pro}));document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');}
-    else{document.getElementById('login-s1').style.display='none';document.getElementById('login-s2').style.display='block';}
+    if(pro.pin_hash){
+      localStorage.setItem('ct_session',JSON.stringify({pro}));
+      document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;
+      showScreen('screen-pin');
+    } else {
+      document.getElementById('login-s1').style.display='none';
+      document.getElementById('login-s2').style.display='block';
+    }
   }catch(err){e.textContent='Error: '+err.message;}
 }
 async function setPin(){
@@ -709,7 +790,8 @@ async function setPin(){
   if(p1.length!==4||!/^\d{4}$/.test(p1))return(e.textContent='PIN must be 4 digits');
   if(p1!==p2)return(e.textContent='PINs do not match');
   const h=btoa(p1+pro.id);
-  await sb('PATCH','professionals?id=eq.'+pro.id,{body:{pin_hash:h}});
+  const now=new Date().toISOString();
+  await sb('PATCH','professionals?id=eq.'+pro.id,{body:{pin_hash:h,trial_started_at:now,last_activity_at:now}});
   pro.pin_hash=h;localStorage.setItem('ct_session',JSON.stringify({pro}));enterApp();
 }
 function checkPin(){
@@ -981,7 +1063,7 @@ async function saveVisit(){
       service_name:l.service_name,subservice_name:l.subservice_name,
       rate:l.rate,qty:l.qty,amount:l.amount
     }))});
-    closeModal('visit-modal');toast(editVisitId?'Visit updated ✓':'Visit saved ✓');
+    closeModal('visit-modal');toast(editVisitId?'Visit updated ✓':'Visit saved ✓');sb('PATCH','professionals?id=eq.'+pro.id,{body:{last_activity_at:new Date().toISOString()}});
     await syncAll();
   }catch(e){errEl.textContent='Error: '+e.message;}
 }
