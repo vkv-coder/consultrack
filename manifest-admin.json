@@ -1,0 +1,13 @@
+{
+  "name": "ConsulTrack Admin",
+  "short_name": "CT Admin",
+  "description": "Consultation Fee Tracker - Admin Panel",
+  "start_url": "/consultrack/admin.html",
+  "display": "standalone",
+  "background_color": "#134e4a",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "consultrack-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "consultrack-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
