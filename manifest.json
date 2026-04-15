@@ -1,7 +1,7 @@
 {
-  "name": "ConsulTrack Admin",
+  "name": "ConsulTrack",
   "short_name": "ConsulTrack",
-  "description": "Consultation Fee Tracker - Admin Panel",
+  "description": "Consultation Fee Tracker",
   "start_url": "/consultrack/,
   "display": "standalone",
   "background_color": "#134e4a",
