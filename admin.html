@@ -2,1203 +2,437 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#1565C0">
-<title>ConsulTrack</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ConsulTrack Admin</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-:root{
-  --navy:#1565C0;--navy2:#1976D2;--navy3:#1E88E5;
-  --gold:#F57C00;--gold2:#FF9800;
-  --teal:#0097A7;--teal2:#00ACC1;
-  --bg:#F0F4FF;--bg2:#E3EEFF;
-  --white:#fff;--text:#1a2744;--text2:#3d5a8a;
-  --muted:#6b7e93;--muted2:#8fa3b8;
-  --red:#D32F2F;--green:#2E7D32;
-  --border:#c5d5ee;--shadow:0 2px 16px rgba(21,101,192,0.10);
-  --r:14px;--r2:10px;
-  --footer-h:52px;
-}
-html,body{height:100%;overflow:hidden;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
-.screen{display:none;height:100%;flex-direction:column;}
-.screen.active{display:flex;}
-.hdr{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:14px 16px 0;flex-shrink:0;}
-.hdr-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;}
-.logo{font-family:'Cormorant Garamond',serif;font-size:2.2rem;color:#fff;letter-spacing:-0.5px;line-height:1;}
-.logo span{color:#FFD54F;}
-.hdr-sub{font-size:0.78rem;color:rgba(255,255,255,0.6);margin-top:2px;}
-.sync-pill{font-size:0.72rem;font-weight:700;padding:5px 13px;border-radius:20px;}
-.sp-ok{background:rgba(255,255,255,0.2);color:#fff;}
-.sp-busy{background:rgba(255,213,79,0.25);color:#FFD54F;}
-.sp-err{background:rgba(255,80,80,0.25);color:#ffcdd2;}
-.icon-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);color:#fff;width:36px;height:36px;border-radius:9px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.tabs{display:flex;background:rgba(0,0,0,0.18);padding:0 2px;gap:1px;}
-.tab{flex:1;padding:11px 2px;text-align:center;font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.45);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;text-transform:uppercase;letter-spacing:0.2px;}
-.tab.active{color:#FFD54F;border-bottom-color:#FFD54F;}
-.scroll-area{flex:1;overflow-y:auto;padding-bottom:calc(var(--footer-h) + 8px);-webkit-overflow-scrolling:touch;}
-.footer-bar{position:fixed;bottom:0;left:0;right:0;height:var(--footer-h);background:#fff;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;box-shadow:0 -2px 12px rgba(21,101,192,0.08);z-index:100;}
-.footer-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;cursor:pointer;padding:6px 4px;color:var(--muted);font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;transition:color 0.2s;}
-.footer-btn:hover{color:var(--navy);}
-.footer-btn .fi{font-size:1.1rem;}
-.footer-sep{width:1px;height:28px;background:var(--border);}
-.page{display:none;padding:14px;}
-.page.active{display:block;}
-.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow);}
-.card-title{font-size:0.72rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:0.9px;margin-bottom:12px;}
-.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.sum-card{border-radius:var(--r);padding:14px 16px;border:1px solid var(--border);box-shadow:var(--shadow);}
-.s-navy{background:linear-gradient(135deg,var(--navy),var(--navy2));border:none;}
-.s-teal{background:linear-gradient(135deg,var(--teal),var(--teal2));border:none;}
-.s-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;}
-.s-plain{background:#fff;}
-.sum-lbl{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:rgba(255,255,255,0.8);margin-bottom:5px;}
-.s-plain .sum-lbl{color:var(--muted);}
-.sum-val{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;color:#fff;line-height:1;}
-.s-plain .sum-val{color:var(--text);}
-.sum-val.sm{font-size:1.2rem;}
-.fg{margin-bottom:11px;}
-label{font-size:0.72rem;font-weight:700;color:var(--text2);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;}
-input,select{width:100%;padding:11px 13px;background:#fff;border:1.5px solid var(--border);border-radius:var(--r2);font-family:'Inter',sans-serif;font-size:0.95rem;color:var(--text);outline:none;-webkit-appearance:none;appearance:none;transition:border-color 0.2s;}
-input::placeholder{color:var(--muted2);}
-select option{background:#fff;color:var(--text);}
-input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,101,192,0.1);}
-.master-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;}
-.master-row .fg{flex:1;margin:0;}
-.master-row .add-btn{flex-shrink:0;height:43px;padding:0 16px;background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border:none;border-radius:var(--r2);font-size:0.88rem;font-weight:700;cursor:pointer;white-space:nowrap;}
-.master-row .add-btn:active{transform:scale(0.97);}
-.master-item{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:7px;}
-.mi-name{font-size:0.9rem;font-weight:700;color:var(--text);}
-.mi-sub{font-size:0.73rem;color:var(--muted);margin-top:2px;}
-.del-btn{background:#FFEBEE;border:none;color:var(--red);width:28px;height:28px;border-radius:50%;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.visit-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
-.visit-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
-.visit-card.paid::before{background:var(--green);}
-.visit-card.partial::before{background:var(--gold);}
-.visit-card.pending::before{background:var(--red);}
-.vc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
-.vc-centre{font-weight:700;font-size:1rem;color:var(--text);}
-.vc-date{font-size:0.75rem;color:var(--muted);margin-top:2px;}
-.spill{font-size:0.7rem;font-weight:700;padding:4px 12px;border-radius:20px;}
-.sp-paid{background:#E8F5E9;color:var(--green);}
-.sp-partial{background:#FFF8E1;color:#E65100;}
-.sp-pending{background:#FFEBEE;color:var(--red);}
-.vc-lines{margin-bottom:10px;}
-.vc-line{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.83rem;}
-.vc-line:last-child{border-bottom:none;}
-.vc-line-name{color:var(--text2);font-weight:500;}
-.vc-line-qty{color:var(--muted);font-size:0.75rem;margin-left:4px;}
-.vc-line-amt{font-weight:700;color:var(--text);}
-.vc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);}
-.vc-total{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;color:var(--text);}
-.vc-recd{font-size:0.76rem;color:var(--muted);margin-top:2px;}
-.vc-due{font-size:0.76rem;color:var(--red);font-weight:700;}
-.vc-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;}
-.line-builder{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r2);padding:12px;margin-bottom:10px;}
-.lb-row{display:grid;grid-template-columns:2fr 60px 80px 48px;gap:8px;align-items:end;}
-.lb-add{width:48px;height:44px;background:var(--navy);color:#fff;border:none;border-radius:var(--r2);font-size:1.5rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:20px;}
-.lb-add:active{transform:scale(0.93);}
-.line-item{background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
-.li-name{flex:1;font-size:0.88rem;font-weight:600;color:var(--text);}
-.li-detail{font-size:0.73rem;color:var(--muted);margin-top:2px;}
-.li-amt{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:var(--navy);white-space:nowrap;}
-.li-del{background:#FFEBEE;border:none;color:var(--red);width:26px;height:26px;border-radius:50%;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.visit-total-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:2px solid var(--border);border-bottom:2px solid var(--border);margin-bottom:12px;}
-.btn{display:block;width:100%;padding:13px;border:none;border-radius:var(--r2);font-family:'Inter',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.15s;}
-.btn:active{transform:scale(0.97);}
-.btn-primary{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;}
-.btn-ghost{background:#fff;border:1.5px solid var(--border);color:var(--text);}
-.btn-wa{background:#25D366;color:#fff;border:none;}
-.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:7px 14px;border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;border:none;}
-.btn-sm:active{transform:scale(0.96);}
-.bs-blue{background:#E3F2FD;color:var(--navy);}
-.bs-red{background:#FFEBEE;color:var(--red);}
-.bs-green{background:#E8F5E9;color:var(--green);}
-.dues-card{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);}
-.dues-centre{font-weight:800;font-size:1rem;color:var(--navy);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--border);}
-.dues-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
-.dues-row:last-child{border-bottom:none;}
-.dues-date{font-size:0.82rem;font-weight:600;color:var(--text);}
-.dues-amt{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--text);}
-.dues-right{display:flex;align-items:center;gap:8px;}
-.paid-toggle{padding:6px 16px;border-radius:20px;font-size:0.78rem;font-weight:700;cursor:pointer;border:none;transition:all 0.2s;}
-.pt-unpaid{background:#FFEBEE;color:var(--red);}
-.pt-paid{background:#E8F5E9;color:var(--green);}
-.rtype-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-.report-scroll{overflow-x:auto;}
-.rtable{width:100%;border-collapse:collapse;font-size:0.75rem;min-width:720px;}
-.rtable th{background:var(--navy);color:#fff;padding:9px 10px;text-align:left;font-weight:700;font-size:0.68rem;letter-spacing:0.4px;}
-.rtable td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text);}
-.rtable tr:hover td{background:var(--bg);}
-.rtable tfoot td{background:var(--bg2);font-weight:700;color:var(--navy);border-top:2px solid var(--navy);}
-.report-actions{display:flex;gap:8px;margin-bottom:12px;}
-.report-actions button{flex:1;padding:11px;font-size:0.85rem;}
-.cr-hdr{background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:var(--r);padding:18px;margin-bottom:12px;text-align:center;}
-.cr-title{font-family:'Cormorant Garamond',serif;font-size:1.55rem;color:#fff;margin-bottom:4px;}
-.cr-sub{font-size:0.78rem;color:rgba(255,255,255,0.75);}
-.cr-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.84rem;}
-.cr-row:last-child{border-bottom:none;}
-.cr-lbl{color:var(--muted);}
-.cr-val{font-weight:700;color:var(--text);}
-.cr-total-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px;margin-top:12px;}
-.overlay{position:fixed;inset:0;background:rgba(21,101,192,0.28);z-index:200;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity 0.25s;}
-.overlay.open{opacity:1;pointer-events:all;}
-.modal{background:#fff;border-radius:24px 24px 0 0;padding:22px 18px 36px;width:100%;max-width:560px;max-height:93vh;overflow-y:auto;transform:translateY(40px);transition:transform 0.25s;box-shadow:0 -4px 30px rgba(21,101,192,0.15);}
-.overlay.open .modal{transform:translateY(0);}
-.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-.modal-title{font-family:'Cormorant Garamond',serif;font-size:1.45rem;color:var(--text);}
-.modal-close{background:var(--bg);border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:50%;font-size:1.1rem;cursor:pointer;}
-.pay-inline{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:12px;margin-top:8px;display:none;}
-.pay-inline.open{display:block;}
-.pay-inline-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-.setup-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#E3EEFF,#F0F4FF);overflow-y:auto;}
-.setup-logo{font-family:'Cormorant Garamond',serif;font-size:2.6rem;color:var(--navy);text-align:center;margin-bottom:4px;}
-.setup-logo span{color:var(--gold);}
-.setup-sub{color:var(--muted);font-size:0.82rem;text-align:center;margin-bottom:28px;}
-.setup-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:24px 20px;width:100%;max-width:420px;box-shadow:var(--shadow);}
-.setup-card h2{font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:6px;}
-.setup-card p{font-size:0.8rem;color:var(--muted);line-height:1.6;margin-bottom:18px;}
-.err-msg{font-size:0.78rem;margin-top:8px;text-align:center;}
-.err-red{color:var(--red);}
-.err-green{color:var(--green);}
-.divider{border:none;border-top:1px solid var(--border);margin:12px 0;}
-.trial-banner{padding:9px 16px;text-align:center;font-size:0.8rem;font-weight:700;color:#fff;flex-shrink:0;display:none;}
-.pp-card{background:#fff;margin:12px;border-radius:var(--r);padding:16px;border:1px solid var(--border);box-shadow:var(--shadow);}
-.pp-card h3{font-size:0.88rem;font-weight:700;color:var(--navy);margin-bottom:8px;}
-.pp-card p{font-size:0.83rem;color:var(--muted);line-height:1.7;}
-.pp-promise{background:#E8F5E9;border-radius:10px;padding:14px;}
-.pp-item{font-size:0.88rem;font-weight:700;color:#2E7D32;margin-bottom:7px;}
-.pp-item:last-child{margin-bottom:0;}
-.support-wrap{flex:1;overflow-y:auto;background:var(--bg);}
-.support-card{background:#fff;margin:12px;border-radius:var(--r);padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);}
-.empty{text-align:center;padding:36px 20px;color:var(--muted);}
-.empty-icon{font-size:2.2rem;margin-bottom:8px;opacity:0.4;}
-.pend-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
-.pend-row:last-child{border-bottom:none;}
-.loading{text-align:center;padding:30px;color:var(--muted);}
-.period-bar{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
-.period-lbl{font-size:0.72rem;font-weight:700;color:var(--muted);white-space:nowrap;}
-.toast{position:fixed;bottom:62px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--navy);color:#fff;padding:10px 22px;border-radius:30px;font-size:0.82rem;font-weight:600;z-index:400;opacity:0;transition:all 0.3s;white-space:nowrap;pointer-events:none;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4ff;min-height:100vh;}
+
+/* ── LOGIN ── */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a56db,#0e3a8a);}
+.login-box{background:#fff;border-radius:20px;padding:36px 28px;width:320px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.login-box h2{color:#1a56db;font-size:1.5rem;margin-bottom:6px;}
+.login-box p{color:#666;font-size:0.85rem;margin-bottom:24px;}
+.login-box input{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:1rem;margin-bottom:14px;outline:none;}
+.login-box input:focus{border-color:#1a56db;}
+.login-box button{width:100%;padding:13px;background:#1a56db;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;}
+.login-box button:hover{background:#1648c0;}
+#login-err{color:#e53e3e;font-size:0.82rem;margin-top:8px;}
+
+/* ── MAIN ── */
+#main-screen{display:none;}
+.header{background:linear-gradient(135deg,#1a56db,#0e3a8a);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.header-left h1{font-size:1.2rem;font-weight:700;}
+.header-left p{font-size:0.75rem;opacity:0.8;margin-top:2px;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.refresh-info{font-size:0.72rem;opacity:0.75;text-align:right;}
+.btn-logout{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:7px 14px;border-radius:20px;font-size:0.82rem;cursor:pointer;}
+.btn-logout:hover{background:rgba(255,255,255,0.3);}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 14px 8px;}
+.stat-card{background:#fff;border-radius:14px;padding:16px 14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
+.stat-num{font-size:2rem;font-weight:800;line-height:1;}
+.stat-num.blue{color:#1a56db;}
+.stat-num.orange{color:#dd6b20;}
+.stat-num.green{color:#2f855a;}
+.stat-num.red{color:#c53030;}
+.stat-lbl{font-size:0.72rem;color:#718096;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em;}
+
+/* ── TABS ── */
+.tabs-bar{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 14px;gap:0;overflow-x:auto;}
+.tab-btn{padding:11px 14px;border:none;background:none;font-size:0.82rem;font-weight:600;color:#718096;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;}
+.tab-btn.active{color:#1a56db;border-bottom-color:#1a56db;}
+
+/* ── CONTENT ── */
+.tab-content{display:none;padding:14px;}
+.tab-content.active{display:block;}
+
+/* ── FILTER ROW ── */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;}
+.filter-row select,.filter-row input{flex:1;padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:0.82rem;background:#fff;}
+.btn-refresh{padding:9px 16px;background:#1a56db;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+.btn-refresh:hover{background:#1648c0;}
+
+/* ── USER CARDS ── */
+.section-title{font-size:0.78rem;font-weight:700;color:#1a56db;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;}
+.user-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.07);}
+.uc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.uc-name{font-size:1rem;font-weight:700;color:#1a2744;}
+.uc-badge{font-size:0.7rem;padding:3px 9px;border-radius:20px;font-weight:600;}
+.badge-trial{background:#fef3c7;color:#d97706;}
+.badge-active{background:#d1fae5;color:#065f46;}
+.badge-blocked{background:#fee2e2;color:#991b1b;}
+.badge-not-started{background:#e0e7ff;color:#3730a3;}
+.uc-meta{font-size:0.78rem;color:#4a5568;display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.uc-meta span{display:flex;align-items:center;gap:3px;}
+.uc-activity{font-size:0.75rem;color:#718096;margin-bottom:10px;}
+.uc-activity b{color:#2f855a;}
+.uc-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-wa{background:#25d366;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.btn-wa:hover{background:#20ba58;}
+.btn-block{background:#fee2e2;color:#c53030;border:none;padding:7px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;}
+.btn-block:hover{background:#fbd5d5;}
+.btn-unblock{background:#d1fae5;color:#065f46;border:none;padding:7px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;}
+.btn-extend{background:#e0e7ff;color:#3730a3;border:none;padding:7px 12px;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;}
+.btn-extend:hover{background:#c7d2fe;}
+.extend-row{display:none;margin-top:8px;display:none;align-items:center;gap:8px;}
+.extend-row input{flex:1;padding:7px 10px;border:1.5px solid #c7d2fe;border-radius:7px;font-size:0.82rem;width:80px;}
+.btn-extend-confirm{background:#1a56db;color:#fff;border:none;padding:7px 12px;border-radius:7px;font-size:0.78rem;font-weight:600;cursor:pointer;}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a2744;color:#fff;padding:10px 22px;border-radius:20px;font-size:0.85rem;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:36px 20px;color:#a0aec0;font-size:0.88rem;}
+.empty-icon{font-size:2.5rem;margin-bottom:8px;}
 </style>
 </head>
 <body>
 
-<!-- REGISTER -->
-<div class="screen active" id="screen-register">
-  <div class="setup-wrap">
-    <div class="setup-logo">Consult<span>Track</span></div>
-    <div class="setup-sub">Professional Fee Tracker</div>
-    <div id="spot-banner" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:12px;padding:10px 18px;margin-bottom:16px;text-align:center;width:100%;max-width:420px;display:none;">
-      <div style="font-size:0.88rem;font-weight:800;color:#fff;" id="spot-text">🎉 First 25 doctors FREE lifetime!</div>
-    </div>
-    <div class="setup-card">
-      <h2>🎉 First 25 Doctors — FREE 15-Day Trial!</h2>
-      <p>Register instantly. Your 15-day free trial starts when you add your first visit entry.</p>
-      <div class="fg"><label>Full Name</label><input type="text" id="reg-name" placeholder="Dr. Sharma"></div>
-      <div class="fg"><label>Mobile Number</label><input type="tel" id="reg-mobile" placeholder="9876543210" maxlength="10"></div>
-      <div class="fg"><label>City</label><input type="text" id="reg-city" placeholder="Vadodara"></div>
-      <div class="fg"><label>Profession</label><input type="text" id="reg-prof" placeholder="Radiologist / Pathologist / CA…"></div>
-      <button class="btn btn-primary" id="reg-btn" onclick="submitReg()">Start Free →</button>
-      <div class="err-msg err-red" id="reg-err"></div>
-      <div class="divider"></div>
-      <p style="text-align:center;">Already registered? <span style="color:var(--navy);cursor:pointer;font-weight:700;" onclick="showLogin()">Login →</span></p>
-      <div style="text-align:center;margin-top:10px;">
-        <span style="font-size:0.75rem;color:var(--muted);cursor:pointer;" onclick="showOverlayScreen('screen-privacy')">🔒 Privacy Policy</span>
-        &nbsp;·&nbsp;
-        <a href="mailto:vkvcoder.support@gmail.com" style="font-size:0.75rem;color:var(--muted);">Support</a>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- LOGIN -->
-<div class="screen" id="screen-login">
-  <div class="setup-wrap">
-    <div class="setup-logo">Consult<span>Track</span></div>
-    <div class="setup-sub">Enter your credentials</div>
-    <div class="setup-card">
-      <div id="login-s1">
-        <h2>Login with Mobile</h2>
-        <p>Enter your registered mobile number to continue.</p>
-        <div class="fg"><label>Mobile Number</label><input type="tel" id="login-mobile" placeholder="9876543210" maxlength="10" style="font-size:1.2rem;font-weight:700;text-align:center;letter-spacing:2px;"></div>
-        <button class="btn btn-primary" onclick="verifyMobile()">Continue →</button>
-        <div class="err-msg err-red" id="login-err"></div>
-      </div>
-      <div id="login-s2" style="display:none;">
-        <h2>Set Your PIN</h2>
-        <p>Create a 4-digit PIN. You'll use this to login each time.</p>
-        <div class="fg"><label>New PIN</label><input type="password" id="pin-new" maxlength="4" inputmode="numeric" placeholder="••••" style="text-align:center;font-size:1.6rem;letter-spacing:10px;"></div>
-        <div class="fg"><label>Confirm PIN</label><input type="password" id="pin-confirm" maxlength="4" inputmode="numeric" placeholder="••••" style="text-align:center;font-size:1.6rem;letter-spacing:10px;"></div>
-        <button class="btn btn-primary" onclick="setPin()">Set PIN & Enter App</button>
-        <div class="err-msg err-red" id="pin-err"></div>
-      </div>
-    </div>
-    <div style="margin-top:14px;font-size:0.78rem;color:var(--muted);cursor:pointer;" onclick="showRegister()">← Back</div>
+<div id="login-screen">
+  <div class="login-box">
+    <h2>🩺 ConsulTrack</h2>
+    <p>Admin Panel — Authorised Access Only</p>
+    <input type="password" id="admin-pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Login →</button>
+    <div id="login-err"></div>
   </div>
 </div>
 
-<!-- PIN -->
-<div class="screen" id="screen-pin">
-  <div class="setup-wrap">
-    <div class="setup-logo">Consult<span>Track</span></div>
-    <div class="setup-sub" id="pin-welcome">Welcome back</div>
-    <div class="setup-card">
-      <h2 style="text-align:center;margin-bottom:16px;">Enter PIN</h2>
-      <div class="fg"><input type="password" id="pin-entry" maxlength="4" inputmode="numeric" placeholder="••••"
-        style="text-align:center;font-size:2rem;letter-spacing:12px;" oninput="if(this.value.length===4)checkPin()"></div>
-      <div class="err-msg err-red" id="pin-entry-err"></div>
+<!-- MAIN -->
+<div id="main-screen">
+  <div class="header">
+    <div class="header-left">
+      <h1>🩺 ConsulTrack <span style="color:#93c5fd;">Admin</span></h1>
+      <p>User Management Panel</p>
     </div>
-    <div style="margin-top:14px;font-size:0.78rem;color:var(--muted);cursor:pointer;" onclick="resetApp()">Forgot PIN / Switch account</div>
+    <div class="header-right">
+      <div class="refresh-info">Last refreshed:<br><span id="refresh-time">—</span></div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num blue" id="s-total">0</div><div class="stat-lbl">Total Users</div></div>
+    <div class="stat-card"><div class="stat-num green" id="s-trial">0</div><div class="stat-lbl">Active Trial</div></div>
+    <div class="stat-card"><div class="stat-num orange" id="s-notstarted">0</div><div class="stat-lbl">Not Started</div></div>
+    <div class="stat-card"><div class="stat-num red" id="s-blocked">0</div><div class="stat-lbl">Blocked</div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('not-started')">🔔 Not Started</button>
+    <button class="tab-btn" onclick="switchTab('active-trial')">⏳ Active Trial</button>
+    <button class="tab-btn" onclick="switchTab('all-users')">👥 All Users</button>
+  </div>
+
+  <!-- NOT STARTED TAB -->
+  <div id="tab-not-started" class="tab-content active">
+    <div class="filter-row">
+      <span style="flex:1;font-size:0.8rem;color:#718096;padding:9px 0;">Registered but no visit entry yet</span>
+      <button class="btn-refresh" onclick="loadAll()">↻ Refresh</button>
+    </div>
+    <div class="section-title" id="ns-title">NOT STARTED (0)</div>
+    <div id="ns-list"></div>
+  </div>
+
+  <!-- ACTIVE TRIAL TAB -->
+  <div id="tab-active-trial" class="tab-content">
+    <div class="filter-row">
+      <span style="flex:1;font-size:0.8rem;color:#718096;padding:9px 0;">Trial started, within 15 days</span>
+      <button class="btn-refresh" onclick="loadAll()">↻ Refresh</button>
+    </div>
+    <div class="section-title" id="at-title">ACTIVE TRIAL (0)</div>
+    <div id="at-list"></div>
+  </div>
+
+  <!-- ALL USERS TAB -->
+  <div id="tab-all-users" class="tab-content">
+    <div class="filter-row">
+      <input type="text" id="search-box" placeholder="🔍 Search name / mobile..." oninput="filterAll()">
+      <button class="btn-refresh" onclick="loadAll()">↻ Refresh</button>
+    </div>
+    <div class="section-title" id="au-title">ALL USERS (0)</div>
+    <div id="au-list"></div>
   </div>
 </div>
 
-<!-- TRIAL EXPIRED / BLOCKED -->
-<div class="screen" id="screen-blocked">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(160deg,#FFF3E0,#FFF8E1);">
-    <div style="font-size:3.5rem;margin-bottom:16px;">⏰</div>
-    <div id="blocked-title" style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--navy);text-align:center;margin-bottom:8px;">Trial Ended</div>
-    <div id="blocked-msg" style="font-size:0.85rem;color:var(--muted);text-align:center;line-height:1.7;margin-bottom:24px;">Your 15-day free trial has ended. Please contact support to continue.</div>
-    <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;">
-      <a href="https://wa.me/919327243611?text=Hi%2C%20I%20want%20to%20continue%20ConsulTrack%20after%20my%20trial" target="_blank" style="text-decoration:none;">
-        <button class="btn btn-wa" style="width:100%;padding:14px;">📲 WhatsApp Support</button>
-      </a>
-      <a href="mailto:vkvcoder.support@gmail.com" style="text-decoration:none;">
-        <button class="btn btn-ghost" style="width:100%;padding:14px;">📧 Email Support</button>
-      </a>
-      <button class="btn btn-ghost" style="padding:14px;" onclick="resetApp()">⎋ Logout</button>
-    </div>
-  </div>
-</div>
-
-<!-- PRIVACY -->
-<div class="screen" id="screen-privacy">
-  <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));padding:16px 18px;flex-shrink:0;">
-    <button onclick="hideOverlayScreen()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:7px 16px;border-radius:20px;font-size:0.82rem;cursor:pointer;font-weight:700;">← Back</button>
-    <div style="text-align:center;padding:12px 0 6px;">
-      <div style="font-size:3rem;">🔒</div>
-      <div style="font-size:1.3rem;font-weight:900;color:#fff;margin-top:8px;">Your Data. Your Control.</div>
-      <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:4px;">ConsulTrack — Privacy Policy</div>
-    </div>
-  </div>
-  <div style="flex:1;overflow-y:auto;background:var(--bg);padding-bottom:24px;">
-    <div class="pp-card" style="margin-top:14px;"><div class="pp-promise">
-      <div class="pp-item">✅ We NEVER sell your data</div>
-      <div class="pp-item">✅ We NEVER share your data with anyone</div>
-      <div class="pp-item">✅ We NEVER show ads using your data</div>
-      <div class="pp-item">✅ You can delete your data anytime</div>
-    </div></div>
-    <div class="pp-card"><h3>Data Storage</h3><p>Your data is stored with AES-256 encryption on Supabase servers. Only you can access your data.</p></div>
-    <div class="pp-card"><h3>What We Store</h3><p>• Your name and mobile — for access only<br>• Fee data YOU enter — for YOUR access only<br>• Your PIN — stored as a hash, we cannot read it</p></div>
-    <div class="pp-card"><h3>Your Rights</h3><p>• Export as Excel/PDF anytime<br>• Request deletion anytime<br><br>Contact: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--navy);font-weight:700;">vkvcoder.support@gmail.com</a></p></div>
-    <div class="pp-card"><h3>Security</h3><p>AES-256 at rest · TLS 1.3 in transit · No third party tracking<div style="font-size:0.73rem;color:var(--muted2);margin-top:10px;text-align:right;">Last updated: April 2026</div></p></div>
-  </div>
-</div>
-
-<!-- SUPPORT -->
-<div class="screen" id="screen-support">
-  <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));padding:16px 18px;flex-shrink:0;">
-    <button onclick="hideOverlayScreen()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:7px 16px;border-radius:20px;font-size:0.82rem;cursor:pointer;font-weight:700;">← Back</button>
-    <div style="text-align:center;padding:12px 0 6px;"><div style="font-size:3rem;">📧</div>
-      <div style="font-size:1.3rem;font-weight:900;color:#fff;margin-top:8px;">Support</div>
-    </div>
-  </div>
-  <div class="support-wrap">
-    <div class="support-card">
-      <div style="font-size:0.72rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Contact Us</div>
-      <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg2);border-radius:12px;margin-bottom:12px;">
-        <div style="font-size:1.8rem;">📧</div>
-        <div><div style="font-size:0.78rem;color:var(--muted);font-weight:600;">Email</div>
-          <a href="mailto:vkvcoder.support@gmail.com" style="font-size:1rem;font-weight:700;color:var(--navy);text-decoration:none;">vkvcoder.support@gmail.com</a></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg2);border-radius:12px;">
-        <div style="font-size:1.8rem;">📲</div>
-        <div><div style="font-size:0.78rem;color:var(--muted);font-weight:600;">WhatsApp</div>
-          <a href="https://wa.me/919327243611" style="font-size:1rem;font-weight:700;color:var(--navy);text-decoration:none;">+91 93272 43611</a></div>
-      </div>
-    </div>
-    <div class="support-card">
-      <p style="font-size:0.83rem;color:var(--muted);line-height:1.7;">ConsulTrack by VKV Coder — Professional fee tracker for doctors and consultants.</p>
-      <div style="font-size:0.73rem;color:var(--muted2);margin-top:10px;">Version 8.0 · April 2026</div>
-    </div>
-  </div>
-</div>
-
-<!-- MAIN APP -->
-<div class="screen" id="screen-app">
-  <div class="trial-banner" id="trial-banner"></div>
-  <div class="hdr">
-    <div class="hdr-top">
-      <div>
-        <div class="logo">Consult<span>Track</span></div>
-        <div class="hdr-sub" id="app-pro-name">Loading…</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="sync-pill sp-ok" id="sync-badge">✓ Synced</span>
-        <button class="icon-btn" onclick="syncAll()" title="Sync">↻</button>
-      </div>
-    </div>
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('home',this)">🏠 Home</button>
-      <button class="tab" onclick="showTab('visits',this)">📋 Visits</button>
-      <button class="tab" onclick="showTab('report',this)">📊 Report</button>
-      <button class="tab" onclick="showTab('dues',this)">⏳ Dues</button>
-      <button class="tab" onclick="showTab('master',this)">⚙ Master</button>
-    </div>
-  </div>
-  <div class="scroll-area">
-    <!-- HOME -->
-    <div id="tab-home" class="page active">
-      <div class="period-bar">
-        <span class="period-lbl">Period:</span>
-        <select id="home-period" onchange="renderHome()">
-          <option value="today">Today</option><option value="week">This Week</option>
-          <option value="month" selected>This Month</option><option value="all">All Time</option>
-        </select>
-      </div>
-      <div class="sum-grid">
-        <div class="sum-card s-navy"><div class="sum-lbl">Total Fees</div><div class="sum-val" id="h-total">₹0</div></div>
-        <div class="sum-card s-teal"><div class="sum-lbl">Received</div><div class="sum-val" id="h-recd">₹0</div></div>
-        <div class="sum-card s-gold"><div class="sum-lbl">Pending</div><div class="sum-val sm" id="h-pend">₹0</div></div>
-        <div class="sum-card s-plain"><div class="sum-lbl">Visits</div><div class="sum-val sm" id="h-cnt">0</div></div>
-      </div>
-      <div class="card"><div class="card-title">By Centre</div><div id="h-by-centre"></div></div>
-      <div class="card"><div class="card-title">Recent Visits</div><div id="h-recent"></div></div>
-    </div>
-    <!-- VISITS -->
-    <div id="tab-visits" class="page">
-      <div style="text-align:center;padding:40px 20px 20px;">
-        <div style="font-size:3rem;margin-bottom:12px;">📋</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--navy);margin-bottom:8px;">Record a New Visit</div>
-        <div style="font-size:0.85rem;color:var(--muted);margin-bottom:28px;line-height:1.6;">Tap <b>＋</b> below to add a visit. All saved visits are in the <b>Report</b> tab.</div>
-        <button onclick="openNewVisit()" style="background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border:none;border-radius:var(--r2);padding:14px 32px;font-size:1rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">＋ Add New Visit</button>
-      </div>
-    </div>
-    <!-- REPORT -->
-    <div id="tab-report" class="page">
-      <div class="card" style="margin-bottom:12px;">
-        <div class="rtype-bar">
-          <button id="rtype-all" class="btn btn-primary" onclick="setRType('all')" style="font-size:0.85rem;padding:10px;">📊 All Visits</button>
-          <button id="rtype-cr" class="btn btn-ghost" onclick="setRType('centre')" style="font-size:0.85rem;padding:10px;">🏥 Centre Report</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-          <div class="fg" style="margin:0"><label>From</label><input type="date" id="rf-from"></div>
-          <div class="fg" style="margin:0"><label>To</label><input type="date" id="rf-to"></div>
-        </div>
-        <div id="rf-all-filters">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-            <div class="fg" style="margin:0"><label>Centre</label><select id="rf-centre"><option value="">All</option></select></div>
-            <div class="fg" style="margin:0"><label>Service</label><select id="rf-service"><option value="">All</option></select></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-            <div class="fg" style="margin:0"><label>Mode</label>
-              <select id="rf-mode"><option value="">All</option><option>Cash</option><option>GPay/UPI</option><option>NEFT</option><option>Cheque</option></select></div>
-            <div class="fg" style="margin:0"><label>Status</label>
-              <select id="rf-status"><option value="">All</option><option value="paid">Paid</option><option value="partial">Partial</option><option value="pending">Pending</option></select></div>
-          </div>
-        </div>
-        <div id="rf-centre-filter" style="display:none;">
-          <div class="fg"><label>Select Centre</label><select id="rf-centre-sel"><option value="">— Select Centre —</option></select></div>
-        </div>
-        <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
-      </div>
-      <div class="report-actions" id="report-actions" style="display:none;">
-        <button class="btn btn-ghost" onclick="downloadExcel()">⬇ Excel</button>
-        <button class="btn btn-ghost" onclick="downloadPDF()">⬇ PDF</button>
-        <button class="btn btn-wa" id="wa-btn" style="display:none;" onclick="shareCentreWA()">📲 WhatsApp</button>
-      </div>
-      <div id="report-output"></div>
-    </div>
-    <!-- DUES -->
-    <div id="tab-dues" class="page"><div id="dues-content"></div></div>
-    <!-- MASTER -->
-    <div id="tab-master" class="page">
-      <div class="card">
-        <div class="card-title">Centres / Clinics</div>
-        <div class="master-row">
-          <div class="fg"><label>Centre Name</label><input type="text" id="nc-name" placeholder="e.g. Agilus Diagnostics"></div>
-          <div class="fg"><label>Mobile (WhatsApp)</label><input type="tel" id="nc-phone" placeholder="9876543210" maxlength="10"></div>
-          <div class="fg"><label>Email</label><input type="email" id="nc-email" placeholder="billing@centre.com"></div>
-          <button class="add-btn" onclick="addCentre()">+ Add</button>
-        </div>
-        <div id="centres-list"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Services &amp; Rates</div>
-        <p style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">e.g. Type: <b>MRI</b> · Sub-Type: <b>Brain</b></p>
-        <div class="master-row">
-          <div class="fg"><label>Type</label><input type="text" id="ns-type" placeholder="MRI"></div>
-          <div class="fg"><label>Sub-Type</label><input type="text" id="ns-sub" placeholder="Brain"></div>
-          <div class="fg"><label>Rate ₹</label><input type="number" id="ns-rate" placeholder="3500"></div>
-          <button class="add-btn" onclick="addService()">+ Add</button>
-        </div>
-        <div id="services-list"></div>
-      </div>
-    </div>
-  </div>
-  <div class="footer-bar">
-    <button class="footer-btn" onclick="showOverlayScreen('screen-privacy')"><span class="fi">🔒</span>Privacy</button>
-    <div class="footer-sep"></div>
-    <button class="footer-btn" onclick="showOverlayScreen('screen-support')"><span class="fi">📧</span>Support</button>
-    <div class="footer-sep"></div>
-    <button class="footer-btn" onclick="resetApp()" style="color:var(--red);"><span class="fi">⎋</span>Logout</button>
-  </div>
-  <button id="fab-btn" onclick="openNewVisit()"
-    style="position:fixed;bottom:62px;right:18px;width:56px;height:56px;background:linear-gradient(135deg,var(--navy),var(--navy2));border:none;border-radius:50%;color:#fff;font-size:1.6rem;cursor:pointer;box-shadow:0 6px 20px rgba(21,101,192,0.4);z-index:150;display:none;align-items:center;justify-content:center;">＋</button>
-</div>
-
-<!-- VISIT MODAL -->
-<div class="overlay" id="visit-modal">
-  <div class="modal">
-    <div class="modal-hdr">
-      <div class="modal-title" id="visit-modal-title">New Visit</div>
-      <button class="modal-close" onclick="closeModal('visit-modal')">✕</button>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="fg"><label>Centre</label><select id="v-centre"><option value="">— Select —</option></select></div>
-      <div class="fg"><label>Date</label><input type="date" id="v-date"></div>
-    </div>
-    <div class="card-title" style="margin-bottom:10px;">Service Lines</div>
-    <div class="line-builder">
-      <div class="lb-row">
-        <div class="fg" style="margin:0"><label>Type › Sub-Type</label>
-          <select id="al-svc" onchange="autoFillRate()"><option value="">— Select —</option></select></div>
-        <div class="fg" style="margin:0"><label>Qty</label><input type="number" id="al-qty" value="1" min="1" style="text-align:center;"></div>
-        <div class="fg" style="margin:0"><label>Rate ₹</label><input type="number" id="al-rate" placeholder="0" oninput="calcLineAmt()"></div>
-        <button class="lb-add" onclick="addLine()">+</button>
-      </div>
-      <div id="al-amt" style="text-align:right;font-size:0.8rem;color:var(--muted);margin-top:4px;"></div>
-    </div>
-    <div id="lines-container"></div>
-    <div class="visit-total-bar">
-      <span style="font-size:0.88rem;color:var(--muted);font-weight:700;">Visit Total</span>
-      <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--navy);" id="v-total-display">₹0</span>
-    </div>
-    <div class="fg"><label>Payment Status</label>
-      <select id="v-status" onchange="togglePaySec()">
-        <option value="pending">Pending</option><option value="partial">Partial</option><option value="paid">Paid in Full</option>
-      </select></div>
-    <div id="v-pay-sec" style="display:none;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="fg"><label>Amount Received ₹</label><input type="number" id="v-recd" placeholder="0"></div>
-        <div class="fg"><label>Mode</label><select id="v-mode"><option>Cash</option><option>GPay/UPI</option><option>NEFT</option><option>Cheque</option></select></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="fg"><label>Receipt Date</label><input type="date" id="v-rcpt-date"></div>
-        <div class="fg"><label>Payment Type</label><select id="v-pay-type"><option value="daily">Daily</option><option value="monthly">Monthly</option></select></div>
-      </div>
-    </div>
-    <div class="fg"><label>Notes</label><input type="text" id="v-notes" placeholder="Optional remarks"></div>
-    <button class="btn btn-primary" onclick="saveVisit()">Save Visit</button>
-    <div class="err-msg err-red" id="visit-err"></div>
-  </div>
-</div>
-
-<!-- PAY MODAL -->
-<div class="overlay" id="pay-modal">
-  <div class="modal">
-    <div class="modal-hdr">
-      <div class="modal-title">Receive Payment</div>
-      <button class="modal-close" onclick="closeModal('pay-modal')">✕</button>
-    </div>
-    <div id="pay-info" style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:14px;font-size:0.86rem;color:var(--muted);"></div>
-    <div class="fg"><label>Amount Received ₹</label><input type="number" id="p-amount" placeholder="0"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="fg"><label>Mode</label><select id="p-mode"><option>Cash</option><option>GPay/UPI</option><option>NEFT</option><option>Cheque</option></select></div>
-      <div class="fg"><label>Receipt Date</label><input type="date" id="p-rcpt-date"></div>
-    </div>
-    <button class="btn btn-gold" onclick="savePayment()">Mark Received</button>
-    <div class="err-msg err-red" id="pay-err"></div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
+<div id="toast"></div>
 
 <script>
-const SB_URL='https://jqqnnkzozjskziaizajg.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
-const SCHEMA='consultrack';
-const TRIAL_DAYS=15;
+// ── CONFIG ──────────────────────────────────────────
+const SB_URL  = 'https://jqqnnkzozjskziaizajg.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
+const SCHEMA  = 'consultrack';
+const ADMIN_PASS = 'ct@admin2026';
+const TRIAL_DAYS = 15;
 
-let pro=null,DB={centres:[],services:[],visits:[],visitLines:[]};
-let visitLines=[],editVisitId=null,payVisitId=null;
-let reportData=[],crData=null,rType='all',prevScreen='screen-app';
+let allUsers = [];
 
-async function sb(method,table,opts={}){
-  let url=`${SB_URL}/rest/v1/${table}`;
-  const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',
-    'Accept-Profile':SCHEMA,'Content-Profile':SCHEMA,
-    'Prefer':method==='POST'||method==='PATCH'?'return=representation':''};
-  const p=[];if(opts.filter)p.push(opts.filter);if(opts.order)p.push('order='+opts.order);
-  if(p.length)url+='?'+p.join('&');
-  const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined});
-  if(!r.ok){const e=await r.text();throw new Error(e||'API error '+r.status);}
-  const t=await r.text();return t?JSON.parse(t):[];
+// ── SUPABASE HELPER ──────────────────────────────────
+async function sbFetch(table, method='GET', body=null, qs='') {
+  const url = `${SB_URL}/rest/v1/${table}${qs}`;
+  const opts = {
+    method,
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Accept-Profile': SCHEMA,
+      'Content-Profile': SCHEMA,
+      'Prefer': method==='POST' ? 'return=representation' : 'return=minimal'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) throw new Error(await res.text());
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
 }
 
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
-function showLogin(){showScreen('screen-login');}
-function showRegister(){showScreen('screen-register');}
-function showOverlayScreen(id){prevScreen=document.querySelector('.screen.active')?.id||'screen-app';showScreen(id);}
-function hideOverlayScreen(){showScreen(prevScreen);}
-
-window.onload=async()=>{
-  const s=localStorage.getItem('ct_session');
-  if(s){pro=JSON.parse(s).pro;document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');}
-  else{showScreen('screen-register');loadSpotCount();}
-};
-
-// ── v8: TRIAL LOGIC ──
-// Trial = 15 days from first visit entry (trial_started_at set in saveVisit)
-// admin can extend via trial_extended_days column
-function trialDaysLeft(p){
-  if(!p.trial_started_at) return TRIAL_DAYS; // not started yet
-  const start=new Date(p.trial_started_at);
-  const extra=parseInt(p.trial_extended_days)||0;
-  const end=new Date(start.getTime()+(TRIAL_DAYS+extra)*86400000);
-  return Math.ceil((end-new Date())/86400000);
-}
-
-function checkTrialAndEnter(){
-  if(pro.status==='blocked'||pro.is_blocked){
-    document.getElementById('blocked-title').textContent='Account Blocked';
-    document.getElementById('blocked-msg').textContent='Your account has been blocked. Please contact support.';
-    showScreen('screen-blocked');return;
-  }
-  if(pro.trial_started_at && trialDaysLeft(pro)<=0){
-    document.getElementById('blocked-title').textContent='Trial Ended';
-    document.getElementById('blocked-msg').textContent='Your 15-day free trial has ended. Please contact support to continue using ConsulTrack.';
-    showScreen('screen-blocked');return;
-  }
-  enterApp();
-}
-
-function updateTrialBanner(){
-  const b=document.getElementById('trial-banner');
-  if(!pro.trial_started_at){
-    b.style.display='block';
-    b.style.background='linear-gradient(135deg,#0097A7,#00ACC1)';
-    b.textContent='🎁 15-day free trial starts on your first visit entry';
-    return;
-  }
-  const d=trialDaysLeft(pro);
-  if(d<=3&&d>0){
-    b.style.display='block';
-    b.style.background='linear-gradient(135deg,#F57C00,#FF9800)';
-    b.textContent='⚠️ Trial: '+d+' day'+(d===1?'':'s')+' remaining — Contact support to continue';
+// ── AUTH ─────────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById('admin-pw').value;
+  if (pw === ADMIN_PASS) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'block';
+    loadAll();
   } else {
-    b.style.display='none';
+    document.getElementById('login-err').textContent = '❌ Incorrect password';
+  }
+}
+function doLogout() {
+  document.getElementById('main-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-pw').value = '';
+}
+
+// ── TABS ─────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── LOAD DATA ────────────────────────────────────────
+async function loadAll() {
+  try {
+    const users = await sbFetch('professionals','GET',null,'?select=*&order=created_at.desc');
+    allUsers = users || [];
+    updateStats();
+    renderNS();
+    renderAT();
+    renderAU(allUsers);
+    document.getElementById('refresh-time').textContent = new Date().toLocaleTimeString('en-IN');
+  } catch(e) {
+    toast('Error loading data: '+e.message,'err');
   }
 }
 
-async function loadSpotCount(){
-  try{
-    const rows=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)'});
-    const remaining=25-(rows?rows.length:0);
-    const banner=document.getElementById('spot-banner');
-    if(remaining<=10&&remaining>0){banner.style.display='block';document.getElementById('spot-text').textContent='🔥 Only '+remaining+' of 25 FREE spots remaining!';}
-    else if(remaining<=0){
-      document.getElementById('reg-btn').textContent='Join Waitlist →';
-      document.getElementById('reg-btn').onclick=submitWaitlist;
-      document.querySelector('.setup-card h2').textContent='Join Waitlist';
-      document.querySelector('.setup-card p').textContent='All 25 free spots are taken. Join waitlist — we will contact you when next batch opens.';
-    }
-  }catch(e){console.log('Spot count:',e);}
+// ── STATS ────────────────────────────────────────────
+function updateStats() {
+  const total = allUsers.length;
+  const blocked = allUsers.filter(u=>u.status==='blocked'||u.is_blocked).length;
+  const notStarted = allUsers.filter(u=>!u.trial_started_at && !u.is_blocked && u.status!=='blocked').length;
+  const activeTrial = allUsers.filter(u=>u.trial_started_at && trialDaysLeft(u)>0 && !u.is_blocked && u.status!=='blocked').length;
+
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-trial').textContent = activeTrial;
+  document.getElementById('s-notstarted').textContent = notStarted;
+  document.getElementById('s-blocked').textContent = blocked;
 }
 
-// ── REGISTER — v8: trial_started_at NOT set here, starts on first visit ──
-async function submitReg(){
-  const name=document.getElementById('reg-name').value.trim();
-  const mobile=document.getElementById('reg-mobile').value.trim();
-  const city=document.getElementById('reg-city').value.trim();
-  const profession=document.getElementById('reg-prof').value.trim();
-  const e=document.getElementById('reg-err');e.className='err-msg err-red';e.textContent='';
-  if(!name||!mobile)return(e.textContent='Name and mobile required.');
-  if(mobile.length!==10||!/^\d{10}$/.test(mobile))return(e.textContent='Enter valid 10 digit mobile.');
-  try{
-    e.textContent='Registering…';
-    const existing=await sb('GET','professionals',{filter:'mobile=eq.'+mobile});
-    if(existing&&existing.length){
-      e.className='err-msg err-green';e.textContent='Already registered! Please login.';
-      setTimeout(()=>{showLogin();document.getElementById('login-mobile').value=mobile;},1500);return;
-    }
-    const active=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)'});
-    if((active?active.length:0)>=25){submitWaitlist();return;}
-    // v8: trial_started_at = null — will be set on first visit
-    const res=await sb('POST','professionals',{body:{name,mobile,city,profession,status:'trial',trial_started_at:null,last_activity_at:null,is_waitlist:false}});
-    pro=res[0];
-    e.className='err-msg err-green';e.textContent='✓ Registered! Setting up your PIN…';
-    setTimeout(()=>{document.getElementById('login-s1').style.display='none';document.getElementById('login-s2').style.display='block';showScreen('screen-login');},1000);
-  }catch(err){e.textContent='Error: '+err.message;}
+// ── TRIAL HELPERS ────────────────────────────────────
+function trialDaysLeft(u) {
+  if (!u.trial_started_at) return TRIAL_DAYS; // not started yet
+  const start = new Date(u.trial_started_at);
+  const extra = u.trial_extended_days || 0;
+  const totalDays = TRIAL_DAYS + extra;
+  const end = new Date(start.getTime() + totalDays * 86400000);
+  const diff = Math.ceil((end - new Date()) / 86400000);
+  return diff;
 }
 
-async function submitWaitlist(){
-  const name=document.getElementById('reg-name').value.trim();
-  const mobile=document.getElementById('reg-mobile').value.trim();
-  const city=document.getElementById('reg-city').value.trim();
-  const profession=document.getElementById('reg-prof').value.trim();
-  const e=document.getElementById('reg-err');e.className='err-msg err-red';e.textContent='';
-  if(!name||!mobile)return(e.textContent='Name and mobile required.');
-  try{
-    e.textContent='Adding to waitlist…';
-    await sb('POST','professionals',{body:{name,mobile,city,profession,status:'waitlist',is_waitlist:true}});
-    e.className='err-msg err-green';e.textContent='✓ Added to waitlist!';
-  }catch(err){e.textContent='Error: '+err.message;}
+function trialStatus(u) {
+  if (u.status==='blocked' || u.is_blocked) return 'blocked';
+  if (!u.trial_started_at) return 'not-started';
+  const left = trialDaysLeft(u);
+  if (left > 0) return 'trial';
+  return 'expired';
 }
 
-async function verifyMobile(){
-  const mobile=document.getElementById('login-mobile').value.trim();
-  const e=document.getElementById('login-err');e.textContent='';
-  if(!mobile||mobile.length!==10)return(e.textContent='Enter valid 10 digit mobile.');
-  try{
-    e.textContent='Verifying…';
-    const rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)'});
-    if(!rows||!rows.length)return(e.textContent='Mobile not registered or access blocked.');
-    pro=rows[0];
-    if(pro.pin_hash){localStorage.setItem('ct_session',JSON.stringify({pro}));document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');}
-    else{document.getElementById('login-s1').style.display='none';document.getElementById('login-s2').style.display='block';}
-  }catch(err){e.textContent='Error: '+err.message;}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
-// ── v8: setPin does NOT set trial_started_at ──
-async function setPin(){
-  const p1=document.getElementById('pin-new').value,p2=document.getElementById('pin-confirm').value;
-  const e=document.getElementById('pin-err');
-  if(p1.length!==4||!/^\d{4}$/.test(p1))return(e.textContent='PIN must be 4 digits');
-  if(p1!==p2)return(e.textContent='PINs do not match');
-  const h=btoa(p1+pro.id);
-  await sb('PATCH','professionals?id=eq.'+pro.id,{body:{pin_hash:h}});
-  pro.pin_hash=h;localStorage.setItem('ct_session',JSON.stringify({pro}));
-  checkTrialAndEnter();
-}
+// ── RENDER CARD ──────────────────────────────────────
+function cardHTML(u, showExtend=true) {
+  const status = trialStatus(u);
+  const daysLeft = trialDaysLeft(u);
+  const badgeMap = {
+    'trial':`<span class="uc-badge badge-trial">trial</span>`,
+    'not-started':`<span class="uc-badge badge-not-started">not started</span>`,
+    'blocked':`<span class="uc-badge badge-blocked">blocked</span>`,
+    'expired':`<span class="uc-badge badge-blocked">expired</span>`,
+    'active':`<span class="uc-badge badge-active">active</span>`,
+  };
+  const badge = badgeMap[status] || badgeMap['trial'];
 
-function checkPin(){
-  const val=document.getElementById('pin-entry').value;
-  const e=document.getElementById('pin-entry-err');
-  if(btoa(val+pro.id)===pro.pin_hash){checkTrialAndEnter();}
-  else{e.textContent='Incorrect PIN';document.getElementById('pin-entry').value='';}
-}
-
-function enterApp(){
-  document.getElementById('app-pro-name').textContent=pro.name+' · '+(pro.profession||'');
-  updateTrialBanner();
-  showScreen('screen-app');
-  syncAll();
-}
-
-function resetApp(){
-  if(!confirm('Log out?'))return;
-  localStorage.removeItem('ct_session');pro=null;
-  DB={centres:[],services:[],visits:[],visitLines:[]};
-  showScreen('screen-register');
-}
-
-function setSyncBadge(s){
-  const b=document.getElementById('sync-badge');
-  if(s==='ok'){b.textContent='✓ Synced';b.className='sync-pill sp-ok';}
-  if(s==='busy'){b.textContent='⟳ Syncing';b.className='sync-pill sp-busy';}
-  if(s==='err'){b.textContent='✗ Error';b.className='sync-pill sp-err';}
-}
-
-async function syncAll(){
-  setSyncBadge('busy');
-  try{
-    // Refresh pro data — picks up admin trial extensions / blocks
-    const fp=await sb('GET','professionals',{filter:'id=eq.'+pro.id});
-    if(fp&&fp.length){
-      pro=fp[0];localStorage.setItem('ct_session',JSON.stringify({pro}));
-      if(pro.status==='blocked'||pro.is_blocked){checkTrialAndEnter();return;}
-      if(pro.trial_started_at&&trialDaysLeft(pro)<=0){checkTrialAndEnter();return;}
-      updateTrialBanner();
-    }
-    const pid=pro.id,f='pro_id=eq.'+pid;
-    const c =await sb('GET','centres',{filter:f,order:'name.asc'});
-    const sv=await sb('GET','subservices',{filter:f,order:'service_name.asc,name.asc'});
-    const v =await sb('GET','visits',{filter:f,order:'visit_date.desc'});
-    const vl=await sb('GET','visit_lines',{filter:'pro_id=eq.'+pid,order:'created_at.asc'});
-    DB.centres=c||[];DB.services=sv||[];DB.visits=v||[];DB.visitLines=vl||[];
-    setSyncBadge('ok');refreshAll();
-  }catch(e){setSyncBadge('err');toast('Sync failed: '+e.message);}
-}
-
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-function openModal(id){document.getElementById(id).classList.add('open');}
-function today(){return new Date().toISOString().split('T')[0];}
-function fmtDate(d){if(!d)return'—';return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
-function inr(v){return'₹'+(parseFloat(v)||0).toLocaleString('en-IN');}
-function inPeriod(ds,p){
-  if(!ds)return false;const d=new Date(ds+'T00:00:00'),now=new Date();
-  if(p==='today')return ds===today();
-  if(p==='week'){const s=new Date(now);s.setDate(now.getDate()-now.getDay());s.setHours(0,0,0,0);return d>=s;}
-  if(p==='month')return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
-  return true;
-}
-function spill(s){
-  if(s==='paid')return'<span class="spill sp-paid">✓ Paid</span>';
-  if(s==='partial')return'<span class="spill sp-partial">⟳ Partial</span>';
-  return'<span class="spill sp-pending">! Pending</span>';
-}
-function linesFor(vid){return DB.visitLines.filter(l=>l.visit_id===vid);}
-function svcLabel(s){if(s.service_name&&s.name&&s.name!==s.service_name)return s.service_name+' › '+s.name;return s.service_name||s.name||'—';}
-
-function populateAll(){
-  const svcEl=document.getElementById('al-svc');
-  if(svcEl){const cur=svcEl.value;svcEl.innerHTML='<option value="">— Select Type › Sub-Type —</option>'+DB.services.map(s=>`<option value="${s.id}" data-rate="${s.rate}">${svcLabel(s)} — ${inr(s.rate)}</option>`).join('');if(cur)svcEl.value=cur;}
-  popSel('v-centre',DB.centres,'id','name','— Select Centre —');
-  popSel('rf-centre',DB.centres,'name','name','All');
-  popSel('rf-centre-sel',DB.centres,'id','name','— Select Centre —');
-  const svcNames=[...new Set(DB.services.map(svcLabel))];
-  const rfSvc=document.getElementById('rf-service');
-  if(rfSvc)rfSvc.innerHTML='<option value="">All</option>'+svcNames.map(n=>`<option value="${n}">${n}</option>`).join('');
-}
-function popSel(id,items,vk,lk,ph){
-  const el=document.getElementById(id);if(!el)return;
-  const cur=el.value;
-  el.innerHTML=`<option value="">${ph}</option>`+items.map(i=>`<option value="${i[vk]}">${i[lk]}</option>`).join('');
-  if(cur)el.value=cur;
-}
-function autoFillRate(){
-  const opt=document.getElementById('al-svc').options[document.getElementById('al-svc').selectedIndex];
-  if(opt&&opt.dataset.rate){document.getElementById('al-rate').value=opt.dataset.rate;calcLineAmt();}
-}
-function calcLineAmt(){
-  const r=parseFloat(document.getElementById('al-rate').value)||0,q=parseInt(document.getElementById('al-qty').value)||1;
-  document.getElementById('al-amt').textContent=r*q>0?'Amount: '+inr(r*q):'';
-}
-
-function showTab(tab,el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');el.classList.add('active');
-  document.getElementById('fab-btn').style.display=tab==='visits'?'flex':'none';
-  if(tab==='home')renderHome();if(tab==='report')initReport();
-  if(tab==='dues')renderDues();if(tab==='master')renderMaster();
-}
-function refreshAll(){renderHome();renderDues();renderMaster();populateAll();}
-
-function renderHome(){
-  const period=document.getElementById('home-period').value;
-  const filtered=DB.visits.filter(v=>inPeriod(v.visit_date,period));
-  const total=filtered.reduce((a,v)=>a+(v.total_amount||0),0);
-  const recd=filtered.reduce((a,v)=>a+(v.received||0),0);
-  document.getElementById('h-total').textContent=inr(total);
-  document.getElementById('h-recd').textContent=inr(recd);
-  document.getElementById('h-pend').textContent=inr(total-recd);
-  document.getElementById('h-cnt').textContent=filtered.length;
-  const cmap={};
-  filtered.forEach(v=>{const k=v.centre_name;if(!cmap[k])cmap[k]={t:0,r:0};cmap[k].t+=v.total_amount||0;cmap[k].r+=v.received||0;});
-  document.getElementById('h-by-centre').innerHTML=Object.keys(cmap).length?
-    Object.entries(cmap).map(([k,c])=>`<div class="pend-row">
-      <div><div style="font-weight:700;font-size:0.9rem;">${k}</div><div style="font-size:0.73rem;color:var(--muted)">Recd ${inr(c.r)}</div></div>
-      <div style="text-align:right"><div style="font-weight:700;">${inr(c.t)}</div>
-      ${c.t-c.r>0?`<div style="font-size:0.72rem;color:var(--red)">Due ${inr(c.t-c.r)}</div>`:'<div style="font-size:0.72rem;color:var(--green)">✓ Settled</div>'}
-      </div></div>`).join(''):'<div style="color:var(--muted);font-size:0.83rem;text-align:center;padding:8px">No visits this period</div>';
-  const recent=filtered.slice(0,5);
-  document.getElementById('h-recent').innerHTML=recent.length?recent.map(visitCard).join(''):
-    '<div class="empty"><div class="empty-icon">📋</div><p>No visits yet</p></div>';
-}
-
-function visitCard(v){
-  const lines=linesFor(v.id);const due=(v.total_amount||0)-(v.received||0);
-  return`<div class="visit-card ${v.status}">
-    <div class="vc-top"><div><div class="vc-centre">${v.centre_name}</div><div class="vc-date">${fmtDate(v.visit_date)}</div></div>${spill(v.status)}</div>
-    <div class="vc-lines">${lines.map(l=>`<div class="vc-line">
-      <span class="vc-line-name">${l.service_name}${l.subservice_name&&l.subservice_name!==l.service_name?' › '+l.subservice_name:''}<span class="vc-line-qty">×${l.qty||1}</span></span>
-      <span class="vc-line-amt">${inr(l.amount||(l.rate*(l.qty||1)))}</span></div>`).join('')}</div>
-    <div class="vc-footer"><div>
-      <div class="vc-total">${inr(v.total_amount)}</div>
-      ${v.received>0?`<div class="vc-recd">Recd ${inr(v.received)} · ${v.payment_mode||''} ${v.receipt_date?'· '+fmtDate(v.receipt_date):''}</div>`:''}
-      ${due>0?`<div class="vc-due">Due ${inr(due)}</div>`:''}
-    </div></div>
-    <div class="vc-actions">
-      ${v.status!=='paid'?`<button class="btn-sm bs-green" onclick="openPayment('${v.id}')">💰 Receive</button>`:''}
-      <button class="btn-sm bs-blue" onclick="openEditVisit('${v.id}')">✏ Edit</button>
-      <button class="btn-sm bs-red" onclick="deleteVisit('${v.id}')">🗑 Delete</button>
-    </div></div>`;
-}
-
-function openNewVisit(){
-  editVisitId=null;visitLines=[];
-  document.getElementById('visit-modal-title').textContent='New Visit';
-  document.getElementById('v-date').value=today();
-  document.getElementById('v-centre').value='';
-  document.getElementById('v-status').value='pending';
-  document.getElementById('v-recd').value='';
-  document.getElementById('v-mode').value='Cash';
-  document.getElementById('v-rcpt-date').value=today();
-  document.getElementById('v-pay-type').value='daily';
-  document.getElementById('v-notes').value='';
-  document.getElementById('v-pay-sec').style.display='none';
-  document.getElementById('visit-err').textContent='';
-  document.getElementById('al-svc').value='';
-  document.getElementById('al-rate').value='';
-  document.getElementById('al-qty').value='1';
-  document.getElementById('al-amt').textContent='';
-  populateAll();popSel('v-centre',DB.centres,'id','name','— Select Centre —');
-  renderLines();openModal('visit-modal');
-}
-
-function addLine(){
-  const svcSel=document.getElementById('al-svc');
-  const svcOpt=svcSel.options[svcSel.selectedIndex];
-  const rate=parseFloat(document.getElementById('al-rate').value)||0;
-  const qty=parseInt(document.getElementById('al-qty').value)||1;
-  if(!svcOpt||!svcOpt.value)return toast('Select a service');
-  const svcObj=DB.services.find(s=>s.id===svcOpt.value);
-  visitLines.push({service_id:svcOpt.value,service_name:svcObj?.service_name||svcObj?.name||'',subservice_name:svcObj?.name||'',rate,qty,amount:rate*qty});
-  document.getElementById('al-svc').value='';document.getElementById('al-rate').value='';
-  document.getElementById('al-qty').value='1';document.getElementById('al-amt').textContent='';
-  renderLines();
-}
-function removeLine(i){visitLines.splice(i,1);renderLines();}
-function renderLines(){
-  const total=visitLines.reduce((a,l)=>a+l.amount,0);
-  document.getElementById('v-total-display').textContent=inr(total);
-  const el=document.getElementById('lines-container');
-  if(!visitLines.length){el.innerHTML='<div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:12px;border:1.5px dashed var(--border);border-radius:10px;margin-bottom:10px;">No lines added yet</div>';return;}
-  el.innerHTML=visitLines.map((l,i)=>`<div class="line-item">
-    <div style="flex:1;"><div class="li-name">${l.service_name}${l.subservice_name&&l.subservice_name!==l.service_name?' › '+l.subservice_name:''}</div>
-    <div class="li-detail">${inr(l.rate)} × ${l.qty}</div></div>
-    <div class="li-amt">${inr(l.amount)}</div>
-    <button class="li-del" onclick="removeLine(${i})">✕</button></div>`).join('');
-}
-function togglePaySec(){
-  const s=document.getElementById('v-status').value;
-  document.getElementById('v-pay-sec').style.display=s!=='pending'?'block':'none';
-  if(s==='paid')document.getElementById('v-recd').value=visitLines.reduce((a,l)=>a+l.amount,0);
-}
-
-// ── SAVE VISIT — v8: sets trial_started_at on FIRST visit ──
-async function saveVisit(){
-  const errEl=document.getElementById('visit-err');errEl.textContent='';
-  const centreId=document.getElementById('v-centre').value;
-  const date=document.getElementById('v-date').value;
-  const status=document.getElementById('v-status').value;
-  if(!centreId)return(errEl.textContent='Select a centre');
-  if(!date)return(errEl.textContent='Select date');
-  if(!visitLines.length)return(errEl.textContent='Add at least one service line');
-  const centre=DB.centres.find(c=>c.id===centreId);
-  const total=visitLines.reduce((a,l)=>a+l.amount,0);
-  const recd=status==='pending'?0:(parseFloat(document.getElementById('v-recd').value)||0);
-  const finalStatus=recd>=total&&total>0?'paid':recd>0?'partial':'pending';
-  const body={pro_id:pro.id,centre_id:centreId,centre_name:centre.name,visit_date:date,
-    total_amount:total,received:recd,payment_mode:document.getElementById('v-mode').value,
-    receipt_date:document.getElementById('v-rcpt-date').value||null,
-    payment_type:document.getElementById('v-pay-type').value,
-    status:finalStatus,notes:document.getElementById('v-notes').value};
-  try{
-    let vid;
-    if(editVisitId){
-      await sb('PATCH','visits?id=eq.'+editVisitId,{body});
-      await sb('DELETE','visit_lines?visit_id=eq.'+editVisitId);
-      vid=editVisitId;
-    } else {
-      const r=await sb('POST','visits',{body});vid=r[0].id;
-      // v8 KEY: set trial_started_at on FIRST visit, update last_activity_at on every visit
-      const now=new Date().toISOString();
-      if(!pro.trial_started_at){
-        await sb('PATCH','professionals?id=eq.'+pro.id,{body:{trial_started_at:now,last_activity_at:now}});
-        pro.trial_started_at=now;pro.last_activity_at=now;
-        localStorage.setItem('ct_session',JSON.stringify({pro}));
-        updateTrialBanner();
-        toast('🎉 15-day trial started!');
-      } else {
-        await sb('PATCH','professionals?id=eq.'+pro.id,{body:{last_activity_at:now}});
-        pro.last_activity_at=now;
-        localStorage.setItem('ct_session',JSON.stringify({pro}));
-        toast('Visit saved ✓');
-      }
-    }
-    await sb('POST','visit_lines',{body:visitLines.map(l=>({visit_id:vid,pro_id:pro.id,service_name:l.service_name,subservice_name:l.subservice_name,rate:l.rate,qty:l.qty,amount:l.amount}))});
-    closeModal('visit-modal');
-    if(editVisitId)toast('Visit updated ✓');
-    await syncAll();
-  }catch(e){errEl.textContent='Error: '+e.message;}
-}
-
-async function openEditVisit(id){
-  const v=DB.visits.find(x=>x.id===id);editVisitId=id;
-  visitLines=linesFor(id).map(l=>({service_name:l.service_name,subservice_name:l.subservice_name||'',rate:l.rate,qty:l.qty||1,amount:l.amount||(l.rate*(l.qty||1))}));
-  document.getElementById('visit-modal-title').textContent='Edit Visit';
-  populateAll();popSel('v-centre',DB.centres,'id','name','— Select Centre —');
-  document.getElementById('v-centre').value=v.centre_id;
-  document.getElementById('v-date').value=v.visit_date;
-  document.getElementById('v-status').value=v.status;
-  document.getElementById('v-recd').value=v.received||'';
-  document.getElementById('v-mode').value=v.payment_mode||'Cash';
-  document.getElementById('v-rcpt-date').value=v.receipt_date||'';
-  document.getElementById('v-pay-type').value=v.payment_type||'daily';
-  document.getElementById('v-notes').value=v.notes||'';
-  document.getElementById('v-pay-sec').style.display=v.status!=='pending'?'block':'none';
-  document.getElementById('visit-err').textContent='';
-  renderLines();openModal('visit-modal');
-}
-
-async function deleteVisit(id){if(!confirm('Delete this visit?'))return;await sb('DELETE','visits?id=eq.'+id);toast('Deleted');await syncAll();}
-
-function openPayment(id){
-  payVisitId=id;const v=DB.visits.find(x=>x.id===id);const due=(v.total_amount||0)-(v.received||0);
-  document.getElementById('pay-info').innerHTML=`<b style="color:var(--text)">${v.centre_name}</b> · ${fmtDate(v.visit_date)}<br>Total: ${inr(v.total_amount)} · Recd: ${inr(v.received)} · <span style="color:var(--red);font-weight:700">Due: ${inr(due)}</span>`;
-  document.getElementById('p-amount').value=due;
-  document.getElementById('p-mode').value='Cash';
-  document.getElementById('p-rcpt-date').value=today();
-  document.getElementById('pay-err').textContent='';
-  openModal('pay-modal');
-}
-async function savePayment(){
-  const amount=parseFloat(document.getElementById('p-amount').value)||0;
-  if(!amount)return(document.getElementById('pay-err').textContent='Enter amount');
-  const v=DB.visits.find(x=>x.id===payVisitId);
-  const newRecd=Math.min((v.received||0)+amount,v.total_amount||0);
-  const newStatus=newRecd>=(v.total_amount||0)?'paid':'partial';
-  try{
-    await sb('PATCH','visits?id=eq.'+payVisitId,{body:{received:newRecd,payment_mode:document.getElementById('p-mode').value,receipt_date:document.getElementById('p-rcpt-date').value||null,status:newStatus}});
-    closeModal('pay-modal');toast('Payment recorded ✓');await syncAll();
-  }catch(e){document.getElementById('pay-err').textContent='Error: '+e.message;}
-}
-
-function renderDues(){
-  const el=document.getElementById('dues-content');
-  const unpaid=DB.visits.filter(v=>v.status!=='paid');
-  const centres=[...new Set(unpaid.map(v=>v.centre_name))].sort();
-  if(!centres.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎉</div><p style="font-weight:700;color:var(--green);">No pending dues!</p><p style="font-size:0.82rem;color:var(--muted);margin-top:6px;">All payments received</p></div>';return;}
-  el.innerHTML=centres.map(cname=>{
-    const cVisits=unpaid.filter(v=>v.centre_name===cname).sort((a,b)=>b.visit_date.localeCompare(a.visit_date));
-    const totalDue=cVisits.reduce((a,v)=>a+(v.total_amount||0)-(v.received||0),0);
-    return`<div class="dues-card">
-      <div class="dues-centre">${cname} <span style="font-size:0.82rem;font-weight:700;color:var(--red);">Due ${inr(totalDue)}</span></div>
-      ${cVisits.map(v=>{const due=(v.total_amount||0)-(v.received||0);return`
-        <div class="dues-row" id="drow-${v.id}">
-          <div><div class="dues-date">${fmtDate(v.visit_date)}</div>
-          <div style="font-size:0.73rem;color:var(--muted)">${linesFor(v.id).length} service(s) · Total ${inr(v.total_amount)}</div></div>
-          <div class="dues-right">
-            <div class="dues-amt" style="color:var(--red);font-weight:700;">${inr(due)}</div>
-            <button class="paid-toggle pt-unpaid" onclick="toggleDuesPaid('${v.id}',false)">Mark Paid</button>
-          </div>
-        </div>
-        <div class="pay-inline" id="pay-inline-${v.id}">
-          <div class="pay-inline-row">
-            <div class="fg" style="margin:0"><label>Amount ₹</label><input type="number" id="di-amt-${v.id}" value="${due}" placeholder="0"></div>
-            <div class="fg" style="margin:0"><label>Mode</label><select id="di-mode-${v.id}"><option>Cash</option><option>GPay/UPI</option><option>NEFT</option><option>Cheque</option></select></div>
-          </div>
-          <div class="fg"><label>Receipt Date</label><input type="date" id="di-date-${v.id}" value="${today()}"></div>
-          <button class="btn btn-gold" style="padding:10px;" onclick="saveDuesPayment('${v.id}')">Confirm Payment</button>
-        </div>`;}).join('')}
-    </div>`;}).join('');
-}
-function toggleDuesPaid(vid){
-  const el=document.getElementById('pay-inline-'+vid);if(el)el.classList.toggle('open');
-}
-async function saveDuesPayment(vid){
-  const v=DB.visits.find(x=>x.id===vid);
-  const amount=parseFloat(document.getElementById('di-amt-'+vid).value)||0;
-  const mode=document.getElementById('di-mode-'+vid).value;
-  const rcptDate=document.getElementById('di-date-'+vid).value;
-  if(!amount)return toast('Enter amount');
-  const newRecd=Math.min((v.received||0)+amount,v.total_amount||0);
-  const newStatus=newRecd>=(v.total_amount||0)?'paid':'partial';
-  await sb('PATCH','visits?id=eq.'+vid,{body:{received:newRecd,payment_mode:mode,receipt_date:rcptDate||null,status:newStatus}});
-  toast('Payment saved ✓');await syncAll();
-}
-
-function setRType(t){
-  rType=t;
-  document.getElementById('rtype-all').className=t==='all'?'btn btn-primary':'btn btn-ghost';
-  document.getElementById('rtype-cr').className=t==='centre'?'btn btn-primary':'btn btn-ghost';
-  document.getElementById('rf-all-filters').style.display=t==='all'?'block':'none';
-  document.getElementById('rf-centre-filter').style.display=t==='centre'?'block':'none';
-  document.getElementById('report-output').innerHTML='';
-  document.getElementById('report-actions').style.display='none';
-}
-function initReport(){
-  populateAll();
-  if(!document.getElementById('rf-from').value){
-    const d=new Date();d.setDate(1);
-    document.getElementById('rf-from').value=d.toISOString().split('T')[0];
-    document.getElementById('rf-to').value=today();
+  let activityLine = '';
+  if (status === 'not-started') {
+    activityLine = `📊 No visits entered yet`;
+  } else if (u.last_activity_at) {
+    activityLine = `📊 Last activity: <b>${fmtDate(u.last_activity_at)}</b>`;
+  } else {
+    activityLine = `📊 Last activity: No activity yet`;
   }
-  setRType(rType);
-}
-function generateReport(){rType==='centre'?generateCentreReport():generateAllReport();}
 
-function generateAllReport(){
-  const from=document.getElementById('rf-from').value,to=document.getElementById('rf-to').value;
-  const centre=document.getElementById('rf-centre').value,service=document.getElementById('rf-service').value;
-  const mode=document.getElementById('rf-mode').value,status=document.getElementById('rf-status').value;
-  let visits=[...DB.visits].sort((a,b)=>a.visit_date.localeCompare(b.visit_date));
-  if(from)visits=visits.filter(v=>v.visit_date>=from);if(to)visits=visits.filter(v=>v.visit_date<=to);
-  if(centre)visits=visits.filter(v=>v.centre_name===centre);
-  if(mode)visits=visits.filter(v=>v.payment_mode===mode);
-  if(status)visits=visits.filter(v=>v.status===status);
-  let rows=[];
-  visits.forEach(v=>{
-    const lines=linesFor(v.id);
-    if(!lines.length){if(!service)rows.push({date:v.visit_date,centre:v.centre_name,service:'—',qty:1,svcFee:v.total_amount,total:v.total_amount,received:v.received,mode:v.received>0?(v.payment_mode||'—'):'—',rcptDate:v.received>0?v.receipt_date:null,status:v.status,vid:v.id});}
-    else lines.forEach(l=>{
-      const sn=l.service_name+(l.subservice_name&&l.subservice_name!==l.service_name?' › '+l.subservice_name:'');
-      if(service&&sn!==service)return;
-      rows.push({date:v.visit_date,centre:v.centre_name,service:sn,qty:l.qty||1,svcFee:l.amount||(l.rate*(l.qty||1)),total:v.total_amount,received:v.received,mode:v.received>0?(v.payment_mode||'—'):'—',rcptDate:v.received>0?v.receipt_date:null,status:v.status,vid:v.id});
-    });
-  });
-  reportData=rows;
-  const vids=[...new Set(rows.map(r=>r.vid))];
-  const totAll=vids.reduce((a,id)=>{const v=DB.visits.find(x=>x.id===id);return a+(v?.total_amount||0);},0);
-  const totRecd=vids.reduce((a,id)=>{const v=DB.visits.find(x=>x.id===id);return a+(v?.received||0);},0);
-  const totFee=rows.reduce((a,r)=>a+(r.svcFee||0),0);
-  const el=document.getElementById('report-output'),actEl=document.getElementById('report-actions');
-  if(!rows.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><p>No data</p></div>';actEl.style.display='none';return;}
-  document.getElementById('wa-btn').style.display='none';actEl.style.display='flex';
-  el.innerHTML=`<div class="sum-grid" style="margin-bottom:12px;">
-    <div class="sum-card s-navy"><div class="sum-lbl">Total</div><div class="sum-val sm">${inr(totAll)}</div></div>
-    <div class="sum-card s-teal"><div class="sum-lbl">Received</div><div class="sum-val sm">${inr(totRecd)}</div></div>
-    <div class="sum-card s-gold"><div class="sum-lbl">Pending</div><div class="sum-val sm">${inr(totAll-totRecd)}</div></div>
-    <div class="sum-card s-plain"><div class="sum-lbl">Entries</div><div class="sum-val sm">${rows.length}</div></div>
-  </div>
-  <div class="card"><div class="report-scroll"><table class="rtable">
-    <thead><tr><th>Date</th><th>Centre</th><th>Service</th><th>Qty</th><th>Svc Fee</th><th>Total</th><th>Recd</th><th>Mode</th><th>Rcpt Date</th><th>Status</th></tr></thead>
-    <tbody>${rows.map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${r.centre}</td><td>${r.service}</td><td>${r.qty}</td><td>${inr(r.svcFee)}</td><td>${inr(r.total)}</td><td>${inr(r.received)}</td><td>${r.mode}</td><td>${fmtDate(r.rcptDate)}</td><td>${r.status}</td></tr>`).join('')}</tbody>
-    <tfoot><tr><td colspan="4">TOTAL (${rows.length})</td><td>${inr(totFee)}</td><td>${inr(totAll)}</td><td>${inr(totRecd)}</td><td colspan="3">Due: ${inr(totAll-totRecd)}</td></tr></tfoot>
-  </table></div></div>`;
-}
+  let trialLine = '';
+  if (status === 'trial') {
+    trialLine = `&nbsp;&nbsp;<b style="color:#d97706;">Trial: ${daysLeft} days left</b>`;
+  } else if (status === 'expired') {
+    trialLine = `&nbsp;&nbsp;<b style="color:#c53030;">Trial expired</b>`;
+  }
 
-function generateCentreReport(){
-  const centreId=document.getElementById('rf-centre-sel').value;
-  const from=document.getElementById('rf-from').value,to=document.getElementById('rf-to').value;
-  if(!centreId)return toast('Select a centre');if(!from||!to)return toast('Select date range');
-  const centre=DB.centres.find(c=>c.id===centreId);
-  let visits=DB.visits.filter(v=>v.centre_id===centreId&&v.visit_date>=from&&v.visit_date<=to).sort((a,b)=>a.visit_date.localeCompare(b.visit_date));
-  const total=visits.reduce((a,v)=>a+(v.total_amount||0),0);
-  const recd=visits.reduce((a,v)=>a+(v.received||0),0);
-  const due=total-recd;
-  const lastPay=visits.filter(v=>v.received>0).sort((a,b)=>(b.receipt_date||'').localeCompare(a.receipt_date||''))[0];
-  let allLines=[];
-  visits.forEach(v=>linesFor(v.id).forEach(l=>allLines.push({date:v.visit_date,service:l.service_name+(l.subservice_name&&l.subservice_name!==l.service_name?' › '+l.subservice_name:''),qty:l.qty||1,rate:l.rate,amount:l.amount||(l.rate*(l.qty||1))})));
-  crData={centre,from,to,visits,allLines,total,recd,due,lastPay};
-  document.getElementById('report-output').innerHTML=`
-  <div class="cr-hdr"><div class="cr-title">${centre.name}</div>
-    <div class="cr-sub">${fmtDate(from)} — ${fmtDate(to)}</div>
-    <div class="cr-sub">Dr. ${pro.name}${pro.profession?' · '+pro.profession:''}</div>
-    ${centre.phone?`<div class="cr-sub">📞 ${centre.phone}</div>`:''}
-  </div>
-  <div class="card">
-    <div class="cr-row"><span class="cr-lbl">Total Visits</span><span class="cr-val">${visits.length}</span></div>
-    <div class="cr-row"><span class="cr-lbl">Total Fees</span><span class="cr-val">${inr(total)}</span></div>
-    <div class="cr-row"><span class="cr-lbl">Received</span><span class="cr-val" style="color:var(--green)">${inr(recd)}</span></div>
-    <div class="cr-row"><span class="cr-lbl">Pending Due</span><span class="cr-val" style="color:var(--red)">${inr(due)}</span></div>
-    ${lastPay?`<div class="cr-row"><span class="cr-lbl">Last Payment</span><span class="cr-val">${inr(lastPay.received)} on ${fmtDate(lastPay.receipt_date)}</span></div>`:''}
-  </div>
-  <div class="card"><div class="card-title">Service Details</div>
-    ${allLines.map(l=>`<div class="cr-row"><span class="cr-lbl">${fmtDate(l.date)} · ${l.service}${l.qty>1?' ×'+l.qty:''}</span><span class="cr-val">${inr(l.amount)}</span></div>`).join('')}
-    <div class="cr-total-box">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--muted);font-size:0.83rem;">Total</span><span style="font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:700;color:var(--text);">${inr(total)}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);font-size:0.83rem;">Pending Due</span><span style="font-size:1rem;color:var(--red);font-weight:700;">${inr(due)}</span></div>
+  const waMsg = status === 'not-started'
+    ? buildWANotStarted(u)
+    : buildWATrial(u, daysLeft);
+
+  const blockBtn = (status==='blocked')
+    ? `<button class="btn-unblock" onclick="unblockUser('${u.id}')">✅ Unblock</button>`
+    : `<button class="btn-block" onclick="blockUser('${u.id}')">🚫 Block</button>`;
+
+  return `
+  <div class="user-card" id="card-${u.id}">
+    <div class="uc-top">
+      <div class="uc-name">${u.name||'—'}</div>
+      ${badge}
+    </div>
+    <div class="uc-meta">
+      <span>📱 ${u.mobile||'—'}</span>
+      <span>🏙️ ${u.city||'—'}</span>
+      <span>💼 ${u.specialty||u.profession||'—'}</span>
+    </div>
+    <div class="uc-activity">
+      ⏰ Registered: ${fmtDate(u.created_at)}
+      &nbsp;|&nbsp;
+      ${activityLine}${trialLine}
+    </div>
+    <div class="uc-actions">
+      <button class="btn-wa" onclick="sendWA('${encodeURIComponent(waMsg)}','${u.mobile}')">📲 WhatsApp</button>
+      ${showExtend && status!=='blocked' ? `<button class="btn-extend" onclick="toggleExtend('${u.id}')">⏱️ Extend Trial</button>` : ''}
+      ${blockBtn}
+    </div>
+    <div class="extend-row" id="extend-${u.id}">
+      <input type="number" id="ext-days-${u.id}" placeholder="Days" min="1" max="365" style="width:90px;">
+      <button class="btn-extend-confirm" onclick="extendTrial('${u.id}')">Add Days ✓</button>
+      <button onclick="toggleExtend('${u.id}')" style="background:#e2e8f0;border:none;padding:7px 10px;border-radius:7px;cursor:pointer;">✕</button>
     </div>
   </div>`;
-  document.getElementById('wa-btn').style.display='block';
-  document.getElementById('report-actions').style.display='flex';
 }
 
-function downloadExcel(){
-  if(!reportData.length)return toast('Generate All Visits report first');
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
-    ['Date','Centre','Service','Qty','Svc Fee','Total','Received','Mode','Receipt Date','Status'],
-    ...reportData.map(r=>[fmtDate(r.date),r.centre,r.service,r.qty,r.svcFee,r.total,r.received,r.mode,fmtDate(r.rcptDate),r.status])
-  ]),'Fee Report');
-  XLSX.writeFile(wb,'ConsulTrack_'+today()+'.xlsx');toast('Excel downloaded ✓');
+// ── WA MESSAGES ─────────────────────────────────────
+function buildWANotStarted(u) {
+  return `Dear ${u.name||'Doctor'}, thank you for registering on ConsulTrack! Please start using the app and we would truly appreciate your feedback to help us improve. 🙏\n\nVisit: https://vkv-coder.github.io/consultrack`;
 }
-function downloadPDF(){
-  if(rType==='centre'&&crData){downloadCentrePDF();return;}
-  if(!reportData.length)return toast('Generate report first');
-  const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  doc.setFontSize(14);doc.text('ConsulTrack Report — '+pro.name,14,14);
-  doc.setFontSize(9);doc.text('Generated: '+fmtDate(today()),14,20);
-  doc.autoTable({startY:25,head:[['Date','Centre','Service','Qty','Svc Fee','Total','Received','Mode','Rcpt Date','Status']],
-    body:reportData.map(r=>[fmtDate(r.date),r.centre,r.service,r.qty,inr(r.svcFee),inr(r.total),inr(r.received),r.mode,fmtDate(r.rcptDate),r.status]),
-    styles:{fontSize:7,cellPadding:2},headStyles:{fillColor:[21,101,192],textColor:[255,255,255],fontStyle:'bold'}});
-  doc.save('ConsulTrack_'+today()+'.pdf');toast('PDF downloaded ✓');
+function buildWATrial(u, daysLeft) {
+  return `Dear ${u.name||'Doctor'}, your ConsulTrack trial has ${daysLeft} days remaining. Keep tracking your consultations! For any queries, feel free to reach out. 🙏\n\nVisit: https://vkv-coder.github.io/consultrack`;
 }
-function downloadCentrePDF(){
-  if(!crData)return;
-  const{centre,from,to,allLines,total,recd,due,lastPay}=crData;
-  const{jsPDF}=window.jspdf;const doc=new jsPDF({unit:'mm',format:'a4'});
-  doc.setFontSize(16);doc.setFont('helvetica','bold');doc.text('Consultation Fee Statement',105,18,{align:'center'});
-  doc.setFontSize(12);doc.setFont('helvetica','normal');doc.text(centre.name,105,26,{align:'center'});
-  doc.setFontSize(10);doc.text('Dr. '+pro.name+(pro.profession?' · '+pro.profession:''),105,33,{align:'center'});
-  doc.text('Period: '+fmtDate(from)+' to '+fmtDate(to),105,39,{align:'center'});
-  if(centre.phone)doc.text('Phone: '+centre.phone,105,45,{align:'center'});
-  const startY=centre.phone?50:44;doc.line(14,startY-2,196,startY-2);
-  doc.autoTable({startY,head:[['Date','Service','Qty','Rate','Amount']],
-    body:allLines.map(l=>[fmtDate(l.date),l.service,l.qty,inr(l.rate),inr(l.amount)]),
-    styles:{fontSize:9,cellPadding:3},headStyles:{fillColor:[21,101,192],textColor:[255,255,255],fontStyle:'bold'},
-    columnStyles:{3:{halign:'right'},4:{halign:'right'}}});
-  const y=doc.lastAutoTable.finalY+8;
-  doc.setFontSize(10);doc.setFont('helvetica','bold');
-  doc.text('Total Fees: '+inr(total),14,y);doc.text('Received: '+inr(recd),14,y+7);
-  doc.setTextColor(211,47,47);doc.text('Pending Due: '+inr(due),14,y+14);doc.setTextColor(0,0,0);
-  if(lastPay){doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text('Last Payment: '+inr(lastPay.received)+' on '+fmtDate(lastPay.receipt_date),14,y+22);}
-  doc.setFontSize(8);doc.setTextColor(150,150,150);doc.text('Generated by ConsulTrack · vkvcoder.support@gmail.com · '+fmtDate(today()),105,285,{align:'center'});
-  doc.save(centre.name+'_'+from+'_'+to+'.pdf');toast('PDF downloaded ✓');
-}
-function shareCentreWA(){
-  if(!crData)return;
-  const{centre,from,to,allLines,total,recd,due,lastPay}=crData;
-  let msg='*Consultation Fee Statement*\n*'+centre.name+'*\nDr. '+pro.name+(pro.profession?' ('+pro.profession+')':'')+'\nPeriod: '+fmtDate(from)+' to '+fmtDate(to)+'\n\n*Services:*\n';
-  allLines.forEach(l=>msg+='• '+fmtDate(l.date)+' | '+l.service+(l.qty>1?' ×'+l.qty:'')+' | '+inr(l.amount)+'\n');
-  msg+='\n*Total: '+inr(total)+'*\nReceived: '+inr(recd)+'\n*Due: '+inr(due)+'*';
-  if(lastPay)msg+='\nLast Pymt: '+inr(lastPay.received)+' on '+fmtDate(lastPay.receipt_date);
-  msg+='\n\n_ConsulTrack by VKV Coder_';
-  downloadCentrePDF();
-  setTimeout(()=>{const num=centre.whatsapp_number||'';window.open((num?'https://wa.me/'+num:'https://wa.me/')+'?text='+encodeURIComponent(msg),'_blank');toast('WhatsApp opened — attach PDF');},1500);
+function sendWA(msgEnc, mobile) {
+  const num = '91' + mobile.replace(/\D/g,'').slice(-10);
+  const url = `https://wa.me/${num}?text=${msgEnc}`;
+  window.open(url,'_blank');
 }
 
-function renderMaster(){
-  document.getElementById('centres-list').innerHTML=DB.centres.map(c=>`
-    <div class="master-item"><div><div class="mi-name">${c.name}</div>
-      <div class="mi-sub">${[c.phone,c.email,c.whatsapp_number?'📲 '+c.whatsapp_number:''].filter(Boolean).join(' · ')}</div></div>
-      <button class="del-btn" onclick="delCentre('${c.id}')">🗑</button></div>`).join('')||
-    '<div style="color:var(--muted);font-size:0.83rem;">No centres added</div>';
-  document.getElementById('services-list').innerHTML=DB.services.map(s=>`
-    <div class="master-item"><div style="flex:1;"><div class="mi-name">${svcLabel(s)}</div></div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="number" value="${s.rate}" style="width:80px;padding:7px 9px;font-size:0.88rem;border:1.5px solid var(--border);border-radius:8px;text-align:right;" onchange="updateRate('${s.id}',this.value)">
-        <button class="del-btn" onclick="delService('${s.id}')">🗑</button>
-      </div></div>`).join('')||'<div style="color:var(--muted);font-size:0.83rem;">No services added</div>';
+// ── RENDER TABS ──────────────────────────────────────
+function renderNS() {
+  const list = allUsers.filter(u => trialStatus(u) === 'not-started');
+  document.getElementById('ns-title').textContent = `NOT STARTED (${list.length})`;
+  document.getElementById('ns-list').innerHTML = list.length
+    ? list.map(u=>cardHTML(u,false)).join('')
+    : `<div class="empty"><div class="empty-icon">✅</div>Everyone has started using the app!</div>`;
 }
 
-async function addCentre(){
-  const name=document.getElementById('nc-name').value.trim();
-  const phone=document.getElementById('nc-phone').value.trim();
-  const email=document.getElementById('nc-email').value.trim();
-  if(!name)return toast('Enter centre name');
-  const wa=phone?'91'+phone.replace(/\D/g,'').slice(-10):null;
-  await sb('POST','centres',{body:{pro_id:pro.id,name,phone:phone||null,email:email||null,whatsapp_number:wa}});
-  ['nc-name','nc-phone','nc-email'].forEach(id=>document.getElementById(id).value='');
-  toast('Centre added ✓');await syncAll();
+function renderAT() {
+  const list = allUsers.filter(u => trialStatus(u) === 'trial');
+  document.getElementById('at-title').textContent = `ACTIVE TRIAL (${list.length})`;
+  document.getElementById('at-list').innerHTML = list.length
+    ? list.map(u=>cardHTML(u,true)).join('')
+    : `<div class="empty"><div class="empty-icon">⏳</div>No users in active trial</div>`;
 }
-async function delCentre(id){if(!confirm('Delete?'))return;await sb('DELETE','centres?id=eq.'+id);toast('Deleted');await syncAll();}
 
-async function addService(){
-  const type=document.getElementById('ns-type').value.trim();
-  const sub=document.getElementById('ns-sub').value.trim();
-  const rate=parseFloat(document.getElementById('ns-rate').value)||0;
-  if(!type)return toast('Enter service type');
-  await sb('POST','subservices',{body:{pro_id:pro.id,service_id:null,service_name:type,name:sub||'',rate}});
-  ['ns-type','ns-sub','ns-rate'].forEach(id=>document.getElementById(id).value='');
-  toast('Service added ✓');await syncAll();
+function renderAU(list) {
+  document.getElementById('au-title').textContent = `ALL USERS (${list.length})`;
+  document.getElementById('au-list').innerHTML = list.length
+    ? list.map(u=>cardHTML(u,true)).join('')
+    : `<div class="empty"><div class="empty-icon">👥</div>No users found</div>`;
 }
-async function delService(id){if(!confirm('Delete?'))return;await sb('DELETE','subservices?id=eq.'+id);toast('Deleted');await syncAll();}
-async function updateRate(id,rate){await sb('PATCH','subservices?id=eq.'+id,{body:{rate:parseFloat(rate)||0}});toast('Rate updated ✓');}
 
-document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',ev=>{if(ev.target===o)o.classList.remove('open');}));
+function filterAll() {
+  const q = document.getElementById('search-box').value.toLowerCase();
+  if (!q) { renderAU(allUsers); return; }
+  const filtered = allUsers.filter(u =>
+    (u.name||'').toLowerCase().includes(q) ||
+    (u.mobile||'').includes(q) ||
+    (u.city||'').toLowerCase().includes(q)
+  );
+  renderAU(filtered);
+}
+
+// ── ACTIONS ──────────────────────────────────────────
+function toggleExtend(id) {
+  const row = document.getElementById('extend-'+id);
+  row.style.display = row.style.display === 'flex' ? 'none' : 'flex';
+}
+
+async function extendTrial(id) {
+  const daysInput = document.getElementById('ext-days-'+id);
+  const days = parseInt(daysInput.value);
+  if (!days || days < 1) return toast('Enter valid number of days','err');
+  try {
+    const u = allUsers.find(x=>x.id===id);
+    const currentExtra = u.trial_extended_days || 0;
+    await sbFetch('professionals','PATCH',{trial_extended_days: currentExtra + days},`?id=eq.${id}`);
+    toast(`Trial extended by ${days} days ✅`);
+    document.getElementById('extend-'+id).style.display = 'none';
+    await loadAll();
+  } catch(e) {
+    toast('Failed: '+e.message,'err');
+  }
+}
+
+async function blockUser(id) {
+  if (!confirm('Block this user? They will lose app access.')) return;
+  try {
+    await sbFetch('professionals','PATCH',{status:'blocked', is_blocked:true},`?id=eq.${id}`);
+    toast('User blocked 🚫');
+    await loadAll();
+  } catch(e) { toast('Failed: '+e.message,'err'); }
+}
+
+async function unblockUser(id) {
+  if (!confirm('Unblock this user?')) return;
+  try {
+    await sbFetch('professionals','PATCH',{status:'trial', is_blocked:false},`?id=eq.${id}`);
+    toast('User unblocked ✅');
+    await loadAll();
+  } catch(e) { toast('Failed: '+e.message,'err'); }
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = type==='err' ? '#c53030' : '#1a2744';
+  el.style.opacity = 1;
+  setTimeout(()=>el.style.opacity=0, 3000);
+}
 </script>
 </body>
 </html>
