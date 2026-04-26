@@ -388,7 +388,8 @@ function filterAll() {
 // ── ACTIONS ──────────────────────────────────────────
 function toggleExtend(id) {
   const row = document.getElementById('extend-'+id);
-  row.style.display = row.style.display === 'flex' ? 'none' : 'flex';
+  const current = window.getComputedStyle(row).display;
+  row.style.display = current === 'flex' ? 'none' : 'flex';
 }
 
 async function extendTrial(id) {
