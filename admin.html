@@ -167,7 +167,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f4ff;min-height:100vh;}
 const SB_URL  = 'https://jqqnnkzozjskziaizajg.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 const SCHEMA  = 'consultrack';
-const ADMIN_PASS = 'ct@admin2026';
+const ADMIN_PASS = '1';
 const TRIAL_DAYS = 15;
 
 let allUsers = [];
@@ -197,7 +197,7 @@ async function sbFetch(table, method='GET', body=null, qs='') {
 // ── AUTH ─────────────────────────────────────────────
 function doLogin() {
   const pw = document.getElementById('admin-pw').value;
-  if (pw === 1) {
+  if (pw === ADMIN PASS ) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'block';
     loadAll();
