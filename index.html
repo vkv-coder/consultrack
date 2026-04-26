@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" content="#1565C0">
 <title>ConsulTrack</title>
-  <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -411,8 +410,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
         <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
       </div>
       <div class="report-actions" id="report-actions" style="display:none;">
-        <button class="btn btn-ghost" onclick="downloadExcel()">⬇ Excel</button>
-        <button class="btn btn-ghost" onclick="downloadPDF()">⬇ PDF</button>
+        <button class="btn btn-ghost" id="excel-btn" onclick="downloadExcel()">⬇ Excel</button>
         <button class="btn btn-wa" id="wa-btn" style="display:none;" onclick="shareCentreWA()">📲 WhatsApp</button>
       </div>
       <div id="report-output"></div>
@@ -1151,28 +1149,78 @@ function downloadCentrePDF(){
 }
 function shareCentreWA(){
   if(!crData)return;
-  const{centre,from,to,allLines,total,recd,due,lastPay}=crData;
-  let msg='*Consultation Fee Statement*\n*'+centre.name+'*\nDr. '+pro.name+(pro.profession?' ('+pro.profession+')':'')+'\nPeriod: '+fmtDate(from)+' to '+fmtDate(to)+'\n\n*Services:*\n';
-  allLines.forEach(l=>msg+='• '+fmtDate(l.date)+' | '+l.service+(l.qty>1?' ×'+l.qty:'')+' | '+inr(l.amount)+'\n');
-  msg+='\n*Total: '+inr(total)+'*\nReceived: '+inr(recd)+'\n*Due: '+inr(due)+'*';
-  if(lastPay)msg+='\nLast Pymt: '+inr(lastPay.received)+' on '+fmtDate(lastPay.receipt_date);
-  msg+='\n\n_ConsulTrack by VKV Coder_';
+  const{centre}=crData;
+  if(!centre.whatsapp_number){toast('No WhatsApp number for this centre. Add mobile in Master.');return;}
+  // Step 1: Download PDF
   downloadCentrePDF();
-  setTimeout(()=>{const num=centre.whatsapp_number||'';window.open((num?'https://wa.me/'+num:'https://wa.me/')+'?text='+encodeURIComponent(msg),'_blank');toast('WhatsApp opened — attach PDF');},1500);
+  // Step 2: Open WhatsApp on centre number (no text — user attaches PDF)
+  const num='91'+centre.whatsapp_number.replace(/\D/g,'').slice(-10);
+  setTimeout(()=>{
+    window.open('https://wa.me/'+num,'_blank');
+    toast('PDF downloaded! Attach it in WhatsApp and send 📎');
+  },1500);
 }
 
 function renderMaster(){
   document.getElementById('centres-list').innerHTML=DB.centres.map(c=>`
-    <div class="master-item"><div><div class="mi-name">${c.name}</div>
-      <div class="mi-sub">${[c.phone,c.email,c.whatsapp_number?'📲 '+c.whatsapp_number:''].filter(Boolean).join(' · ')}</div></div>
-      <button class="del-btn" onclick="delCentre('${c.id}')">🗑</button></div>`).join('')||
-    '<div style="color:var(--muted);font-size:0.83rem;">No centres added</div>';
+    <div class="master-item" id="ci-${c.id}">
+      <div style="flex:1;">
+        <div class="mi-name">${c.name}</div>
+        <div class="mi-sub">${[c.phone,c.email,c.whatsapp_number?'📲 '+c.whatsapp_number:''].filter(Boolean).join(' · ')||'No contact added'}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="del-btn" style="background:#E3F2FD;color:var(--navy);width:28px;height:28px;" onclick="editCentre('${c.id}')">✏</button>
+        <button class="del-btn" onclick="delCentre('${c.id}')">🗑</button>
+      </div>
+    </div>
+    <div class="pay-inline" id="cedit-${c.id}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div class="fg" style="margin:0"><label>Name</label><input type="text" id="ce-name-${c.id}" value="${c.name||''}"></div>
+        <div class="fg" style="margin:0"><label>Mobile</label><input type="tel" id="ce-phone-${c.id}" value="${c.phone||''}" maxlength="10"></div>
+      </div>
+      <div class="fg"><label>Email</label><input type="email" id="ce-email-${c.id}" value="${c.email||''}"></div>
+      <button class="btn btn-primary" style="padding:10px;" onclick="saveCentreEdit('${c.id}')">Save Changes ✓</button>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:0.83rem;">No centres added</div>';
+
   document.getElementById('services-list').innerHTML=DB.services.map(s=>`
-    <div class="master-item"><div style="flex:1;"><div class="mi-name">${svcLabel(s)}</div></div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="number" value="${s.rate}" style="width:80px;padding:7px 9px;font-size:0.88rem;border:1.5px solid var(--border);border-radius:8px;text-align:right;" onchange="updateRate('${s.id}',this.value)">
+    <div class="master-item" id="si-${s.id}">
+      <div style="flex:1;"><div class="mi-name">${svcLabel(s)}</div></div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--navy);">${inr(s.rate)}</span>
+        <button class="del-btn" style="background:#E3F2FD;color:var(--navy);width:28px;height:28px;" onclick="editService('${s.id}')">✏</button>
         <button class="del-btn" onclick="delService('${s.id}')">🗑</button>
-      </div></div>`).join('')||'<div style="color:var(--muted);font-size:0.83rem;">No services added</div>';
+      </div>
+    </div>
+    <div class="pay-inline" id="sedit-${s.id}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div class="fg" style="margin:0"><label>Type</label><input type="text" id="se-type-${s.id}" value="${s.service_name||''}"></div>
+        <div class="fg" style="margin:0"><label>Sub-Type</label><input type="text" id="se-sub-${s.id}" value="${s.name||''}"></div>
+      </div>
+      <div class="fg"><label>Rate ₹</label><input type="number" id="se-rate-${s.id}" value="${s.rate||0}"></div>
+      <button class="btn btn-primary" style="padding:10px;" onclick="saveServiceEdit('${s.id}')">Save Changes ✓</button>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:0.83rem;">No services added</div>';
+}
+
+function editCentre(id){document.getElementById('cedit-'+id).classList.toggle('open');}
+function editService(id){document.getElementById('sedit-'+id).classList.toggle('open');}
+
+async function saveCentreEdit(id){
+  const name=document.getElementById('ce-name-'+id).value.trim();
+  const phone=document.getElementById('ce-phone-'+id).value.trim();
+  const email=document.getElementById('ce-email-'+id).value.trim();
+  if(!name)return toast('Name required');
+  const wa=phone?'91'+phone.replace(/\D/g,'').slice(-10):null;
+  await sb('PATCH','centres?id=eq.'+id,{body:{name,phone:phone||null,email:email||null,whatsapp_number:wa}});
+  toast('Centre updated ✓');await syncAll();
+}
+
+async function saveServiceEdit(id){
+  const type=document.getElementById('se-type-'+id).value.trim();
+  const sub=document.getElementById('se-sub-'+id).value.trim();
+  const rate=parseFloat(document.getElementById('se-rate-'+id).value)||0;
+  if(!type)return toast('Type required');
+  await sb('PATCH','subservices?id=eq.'+id,{body:{service_name:type,name:sub||'',rate}});
+  toast('Service updated ✓');await syncAll();
 }
 
 async function addCentre(){
