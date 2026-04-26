@@ -326,7 +326,7 @@ function cardHTML(u, showExtend=true) {
     </div>
     <div class="uc-actions">
       <button class="btn-wa" onclick="sendWA('${encodeURIComponent(waMsg)}','${u.mobile}')">📲 WhatsApp</button>
-      ${showExtend && status!=='blocked' ? `<button class="btn-extend" onclick="toggleExtend('${u.id}')">⏱️ Extend Trial</button>` : ''}
+      ${showExtend && status!=='blocked' ? `<button class="btn-extend" onclick="extendTrial('${u.id}')">⏱️ Extend Trial</button>` : ''}
       ${blockBtn}
     </div>
     <div class="extend-row" id="extend-${u.id}">
@@ -393,15 +393,13 @@ function toggleExtend(id) {
 }
 
 async function extendTrial(id) {
-  const daysInput = document.getElementById('ext-days-'+id);
-  const days = parseInt(daysInput.value);
-  if (!days || days < 1) return toast('Enter valid number of days','err');
+  const u = allUsers.find(x=>x.id===id);
+  const days = parseInt(prompt('Extend trial for '+u.name+'.\nEnter number of days to add:','15'));
+  if (!days || days < 1) return;
   try {
-    const u = allUsers.find(x=>x.id===id);
     const currentExtra = u.trial_extended_days || 0;
     await sbFetch('professionals','PATCH',{trial_extended_days: currentExtra + days},`?id=eq.${id}`);
     toast(`Trial extended by ${days} days ✅`);
-    document.getElementById('extend-'+id).style.display = 'none';
     await loadAll();
   } catch(e) {
     toast('Failed: '+e.message,'err');
