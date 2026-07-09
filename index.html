@@ -709,16 +709,12 @@ function enterApp(){
 }
 
 function showForgotPin(){
-  var m=document.getElementById('forgotPinModal');
-  if(m){m.style.display='block';}
-  var inp=document.getElementById('forgotPinMobile');
-  if(inp)inp.value='';
-  var msg=document.getElementById('forgotPinMsg');
-  if(msg)msg.style.display='none';
+  document.getElementById('forgotPinModal').style.display='block';
+  document.getElementById('forgotPinMobile').value='';
+  document.getElementById('forgotPinMsg').style.display='none';
 }
 function hideForgotPin(){
-  var m=document.getElementById('forgotPinModal');
-  if(m)m.style.display='none';
+  document.getElementById('forgotPinModal').style.display='none';
 }
 async function verifyForgotPin(){
   var mobile=document.getElementById('forgotPinMobile').value.trim();
@@ -729,15 +725,13 @@ async function verifyForgotPin(){
     var rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)'});
     if(!rows||!rows.length){msg.textContent='Mobile not registered or access blocked.';msg.style.color='#D32F2F';return;}
     pro=rows[0];
-    // Clear PIN hash so user can set new PIN
     await sb('PATCH','professionals?id=eq.'+pro.id,{body:{pin_hash:null}});
     pro.pin_hash=null;
     localStorage.setItem('ct_session',JSON.stringify({pro}));
     hideForgotPin();
-    document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;
     document.getElementById('login-s1').style.display='none';
     document.getElementById('login-s2').style.display='block';
-    showScreen('screen-setpin');
+    showScreen('screen-login');
   }catch(err){msg.textContent='Error: '+err.message;msg.style.color='#D32F2F';}
 }
 function resetApp(){
