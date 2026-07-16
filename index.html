@@ -200,8 +200,8 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
       <div style="font-size:0.88rem;font-weight:800;color:#fff;" id="spot-text">🎉 First 25 doctors FREE lifetime!</div>
     </div>
     <div class="setup-card">
-      <h2>🎉 First 25 Doctors — FREE 15-Day Trial!</h2>
-      <p>Register instantly. Your 15-day free trial starts when you add your first visit entry.</p>
+      <h2>🎉 First 25 Doctors — FREE 30-Day Trial!</h2>
+      <p>Register instantly. Your 30-day free trial starts when you add your first visit entry.</p>
       <div class="fg"><label>Full Name</label><input type="text" id="reg-name" placeholder="Dr. Sharma"></div>
       <div class="fg"><label>Mobile Number</label><input type="tel" id="reg-mobile" placeholder="9876543210" maxlength="10"></div>
       <div class="fg"><label>City</label><input type="text" id="reg-city" placeholder="Vadodara"></div>
@@ -280,7 +280,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(160deg,#FFF3E0,#FFF8E1);">
     <div style="font-size:3.5rem;margin-bottom:16px;">⏰</div>
     <div id="blocked-title" style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:var(--navy);text-align:center;margin-bottom:8px;">Trial Ended</div>
-    <div id="blocked-msg" style="font-size:0.85rem;color:var(--muted);text-align:center;line-height:1.7;margin-bottom:24px;">Your 15-day free trial has ended. Please contact support to continue.</div>
+    <div id="blocked-msg" style="font-size:0.85rem;color:var(--muted);text-align:center;line-height:1.7;margin-bottom:24px;">Your 30-day free trial has ended. Your data is safe and waiting — contact vkvcoder.support@gmail.com to continue using ConsulTrack.</div>
     <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;">
       <a href="https://wa.me/919327243611?text=Hi%2C%20I%20want%20to%20continue%20ConsulTrack%20after%20my%20trial" target="_blank" style="text-decoration:none;">
         <button class="btn btn-wa" style="width:100%;padding:14px;">📲 WhatsApp Support</button>
@@ -539,7 +539,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
 const SB_URL='https://jqqnnkzozjskziaizajg.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 const SCHEMA='consultrack';
-const TRIAL_DAYS=15;
+const TRIAL_DAYS=30;
 
 let pro=null,DB={centres:[],services:[],visits:[],visitLines:[]};
 let visitLines=[],editVisitId=null,payVisitId=null;
@@ -570,7 +570,7 @@ window.onload=async()=>{
 };
 
 // ── v8: TRIAL LOGIC ──
-// Trial = 15 days from first visit entry (trial_started_at set in saveVisit)
+// Trial = 30 days from first visit entry (trial_started_at set in saveVisit)
 // admin can extend via trial_extended_days column
 function trialDaysLeft(p){
   if(!p.trial_started_at) return TRIAL_DAYS; // not started yet
@@ -588,7 +588,7 @@ function checkTrialAndEnter(){
   }
   if(pro.trial_started_at && trialDaysLeft(pro)<=0){
     document.getElementById('blocked-title').textContent='Trial Ended';
-    document.getElementById('blocked-msg').textContent='Your 15-day free trial has ended. Please contact support to continue using ConsulTrack.';
+    document.getElementById('blocked-msg').textContent='Your 30-day free trial has ended. Your data is safe and waiting — contact vkvcoder.support@gmail.com to continue using ConsulTrack.';
     showScreen('screen-blocked');return;
   }
   enterApp();
@@ -599,7 +599,7 @@ function updateTrialBanner(){
   if(!pro.trial_started_at){
     b.style.display='block';
     b.style.background='linear-gradient(135deg,#0097A7,#00ACC1)';
-    b.textContent='🎁 15-day free trial starts on your first visit entry';
+    b.textContent='🎁 30-day free trial starts on your first visit entry';
     return;
   }
   const d=trialDaysLeft(pro);
@@ -949,7 +949,7 @@ async function saveVisit(){
         pro.trial_started_at=now;pro.last_activity_at=now;
         localStorage.setItem('ct_session',JSON.stringify({pro}));
         updateTrialBanner();
-        toast('🎉 15-day trial started!');
+        toast('🎉 30-day trial started!');
       } else {
         await sb('PATCH','professionals?id=eq.'+pro.id,{body:{last_activity_at:now}});
         pro.last_activity_at=now;
