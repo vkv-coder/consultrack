@@ -719,22 +719,24 @@ function showForgotPin(){
 function hideForgotPin(){
   document.getElementById('forgotPinModal').style.display='none';
 }
+// PIN resets are admin-verified, not self-service: this app has no email on
+// file for professionals (only name/mobile/city), so there is no private
+// channel to send a self-service code to. Instead of wiping the PIN on the
+// spot (which let anyone who knew a mobile number take over the account),
+// this just alerts the admin, who verifies identity out-of-band (phone/
+// WhatsApp) and resets the PIN from the Admin Panel's "Reset PIN" button.
 async function verifyForgotPin(){
   var mobile=document.getElementById('forgotPinMobile').value.trim();
   var msg=document.getElementById('forgotPinMsg');
   if(!mobile||mobile.length!==10){msg.textContent='Enter valid 10 digit mobile.';msg.style.color='#D32F2F';msg.style.display='block';return;}
-  msg.textContent='Verifying...';msg.style.color='#666';msg.style.display='block';
+  msg.textContent='Checking...';msg.style.color='#666';msg.style.display='block';
   try{
     var rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)'});
     if(!rows||!rows.length){msg.textContent='Mobile not registered or access blocked.';msg.style.color='#D32F2F';return;}
-    pro=rows[0];
-    await sb('PATCH','professionals?id=eq.'+pro.id,{body:{pin_hash:null}});
-    pro.pin_hash=null;
-    localStorage.setItem('ct_session',JSON.stringify({pro}));
-    hideForgotPin();
-    document.getElementById('login-s1').style.display='none';
-    document.getElementById('login-s2').style.display='block';
-    showScreen('screen-login');
+    var p=rows[0];
+    await tg('🔑 PIN Reset Requested\n\nName: '+p.name+'\nMobile: '+p.mobile+'\nCity: '+(p.city||'-')+'\n\nVerify their identity, then reset their PIN from the ConsulTrack Admin Panel.');
+    msg.textContent='✓ Request received. We will verify your identity and reset your PIN shortly — you will be contacted on WhatsApp.';
+    msg.style.color='#2f855a';
   }catch(err){msg.textContent='Error: '+err.message;msg.style.color='#D32F2F';}
 }
 function resetApp(){
