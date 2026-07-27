@@ -552,7 +552,7 @@ async function sb(method,table,opts={}){
   let url=`${SB_URL}/rest/v1/${table}`;
   const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',
     'Accept-Profile':SCHEMA,'Content-Profile':SCHEMA,
-    'Prefer':method==='POST'||method==='PATCH'?'return=representation':''};
+    'Prefer':method==='POST'?'return=representation':'return=minimal'};
   const p=[];if(opts.filter)p.push(opts.filter);if(opts.order)p.push('order='+opts.order);
   if(p.length)url+='?'+p.join('&');
   const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined});
@@ -617,7 +617,7 @@ function updateTrialBanner(){
 
 async function loadSpotCount(){
   try{
-    const rows=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)'});
+    const rows=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)&select=id'});
     const remaining=25-(rows?rows.length:0);
     const banner=document.getElementById('spot-banner');
     if(remaining<=10&&remaining>0){banner.style.display='block';document.getElementById('spot-text').textContent='🔥 Only '+remaining+' of 25 FREE spots remaining!';}
@@ -641,12 +641,12 @@ async function submitReg(){
   if(mobile.length!==10||!/^\d{10}$/.test(mobile))return(e.textContent='Enter valid 10 digit mobile.');
   try{
     e.textContent='Registering…';
-    const existing=await sb('GET','professionals',{filter:'mobile=eq.'+mobile});
+    const existing=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&select=id'});
     if(existing&&existing.length){
       e.className='err-msg err-green';e.textContent='Already registered! Please login.';
       setTimeout(()=>{showLogin();document.getElementById('login-mobile').value=mobile;},1500);return;
     }
-    const active=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)'});
+    const active=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)&select=id'});
     if((active?active.length:0)>=25){submitWaitlist();return;}
     // v8: trial_started_at = null — will be set on first visit
     const res=await sb('POST','professionals',{body:{name,mobile,city,profession,status:'trial',trial_started_at:null,last_activity_at:null,is_waitlist:false}});
@@ -677,31 +677,35 @@ async function verifyMobile(){
   if(!mobile||mobile.length!==10)return(e.textContent='Enter valid 10 digit mobile.');
   try{
     e.textContent='Verifying…';
-    const rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)'});
+    const rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)&select=id,name,mobile,city,profession,access_code,status,created_at,trial_started_at,last_activity_at,is_waitlist,trial_extended_days,is_blocked,has_pin'});
     if(!rows||!rows.length)return(e.textContent='Mobile not registered or access blocked.');
     pro=rows[0];
-    if(pro.pin_hash){localStorage.setItem('ct_session',JSON.stringify({pro}));document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');}
+    if(pro.has_pin){localStorage.setItem('ct_session',JSON.stringify({pro}));document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');}
     else{document.getElementById('login-s1').style.display='none';document.getElementById('login-s2').style.display='block';}
   }catch(err){e.textContent='Error: '+err.message;}
 }
 
 // ── v8: setPin does NOT set trial_started_at ──
+// v9: PIN is set/verified server-side now (ct_set_pin/ct_verify_pin RPCs) -
+// the client never computes or sees the actual hash.
 async function setPin(){
   const p1=document.getElementById('pin-new').value,p2=document.getElementById('pin-confirm').value;
   const e=document.getElementById('pin-err');
   if(p1.length!==4||!/^\d{4}$/.test(p1))return(e.textContent='PIN must be 4 digits');
   if(p1!==p2)return(e.textContent='PINs do not match');
-  const h=btoa(p1+pro.id);
-  await sb('PATCH','professionals?id=eq.'+pro.id,{body:{pin_hash:h}});
-  pro.pin_hash=h;localStorage.setItem('ct_session',JSON.stringify({pro}));
+  await sb('POST','rpc/ct_set_pin',{body:{p_id:pro.id,p_pin:p1}});
+  pro.has_pin=true;localStorage.setItem('ct_session',JSON.stringify({pro}));
   checkTrialAndEnter();
 }
 
-function checkPin(){
+async function checkPin(){
   const val=document.getElementById('pin-entry').value;
   const e=document.getElementById('pin-entry-err');
-  if(btoa(val+pro.id)===pro.pin_hash){checkTrialAndEnter();}
-  else{e.textContent='Incorrect PIN';document.getElementById('pin-entry').value='';}
+  try{
+    const ok=await sb('POST','rpc/ct_verify_pin',{body:{p_id:pro.id,p_pin:val}});
+    if(ok){checkTrialAndEnter();}
+    else{e.textContent='Incorrect PIN';document.getElementById('pin-entry').value='';}
+  }catch(err){e.textContent='Error: '+err.message;}
 }
 
 function enterApp(){
@@ -731,7 +735,7 @@ async function verifyForgotPin(){
   if(!mobile||mobile.length!==10){msg.textContent='Enter valid 10 digit mobile.';msg.style.color='#D32F2F';msg.style.display='block';return;}
   msg.textContent='Checking...';msg.style.color='#666';msg.style.display='block';
   try{
-    var rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)'});
+    var rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)&select=id,name,mobile,city'});
     if(!rows||!rows.length){msg.textContent='Mobile not registered or access blocked.';msg.style.color='#D32F2F';return;}
     var p=rows[0];
     await tg('🔑 PIN Reset Requested\n\nName: '+p.name+'\nMobile: '+p.mobile+'\nCity: '+(p.city||'-')+'\n\nVerify their identity, then reset their PIN from the ConsulTrack Admin Panel.');
@@ -757,7 +761,7 @@ async function syncAll(){
   setSyncBadge('busy');
   try{
     // Refresh pro data — picks up admin trial extensions / blocks
-    const fp=await sb('GET','professionals',{filter:'id=eq.'+pro.id});
+    const fp=await sb('GET','professionals',{filter:'id=eq.'+pro.id+'&select=id,name,mobile,city,profession,access_code,status,created_at,trial_started_at,last_activity_at,is_waitlist,trial_extended_days,is_blocked,has_pin'});
     if(fp&&fp.length){
       pro=fp[0];localStorage.setItem('ct_session',JSON.stringify({pro}));
       if(pro.status==='blocked'||pro.is_blocked){checkTrialAndEnter();return;}

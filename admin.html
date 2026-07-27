@@ -232,7 +232,7 @@ function switchTab(name) {
 // ── LOAD DATA ────────────────────────────────────────
 async function loadAll() {
   try {
-    const users = await sbFetch('professionals','GET',null,'?select=*&order=created_at.desc');
+    const users = await sbFetch('professionals','GET',null,'?select=id,name,mobile,city,profession,access_code,status,created_at,trial_started_at,last_activity_at,is_waitlist,trial_extended_days,is_blocked,has_pin&order=created_at.desc');
     allUsers = users || [];
     updateStats();
     renderNS();
@@ -337,7 +337,7 @@ function cardHTML(u, showExtend=true) {
     <div class="uc-actions">
       <button class="btn-wa" onclick="sendWA('${encodeURIComponent(waMsg)}','${u.mobile}')">📲 WhatsApp</button>
       ${showExtend && status!=='blocked' ? `<button class="btn-extend" onclick="extendTrial('${u.id}')">⏱️ Extend Trial</button>` : ''}
-      ${u.pin_hash ? `<button class="btn-extend" onclick="resetUserPin('${u.id}','${(u.name||'').replace(/'/g,"\\'")}')">🔑 Reset PIN</button>` : ''}
+      ${u.has_pin ? `<button class="btn-extend" onclick="resetUserPin('${u.id}','${(u.name||'').replace(/'/g,"\\'")}')">🔑 Reset PIN</button>` : ''}
       ${blockBtn}
     </div>
     <div class="extend-row" id="extend-${u.id}">
@@ -431,7 +431,7 @@ async function blockUser(id) {
 async function resetUserPin(id, name) {
   if (!confirm('Reset PIN for ' + name + '? Only do this after verifying it\'s really them (call/WhatsApp). They will be asked to set a new PIN on next login.')) return;
   try {
-    await sbFetch('professionals','PATCH',{pin_hash:null},`?id=eq.${id}`);
+    await sbFetch('rpc/ct_clear_pin','POST',{p_id:id});
     toast('PIN reset for ' + name + ' ✅');
     await loadAll();
   } catch(e) { toast('Failed: '+e.message,'err'); }
