@@ -553,7 +553,7 @@ async function sb(method,table,opts={}){
   const h={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json',
     'Accept-Profile':SCHEMA,'Content-Profile':SCHEMA,
     'Prefer':method==='POST'?'return=representation':'return=minimal'};
-  const p=[];if(opts.filter)p.push(opts.filter);if(opts.order)p.push('order='+opts.order);
+  const p=[];if(opts.filter)p.push(opts.filter);if(opts.order)p.push('order='+opts.order);if(opts.select)p.push('select='+opts.select);
   if(p.length)url+='?'+p.join('&');
   const r=await fetch(url,{method,headers:h,body:opts.body?JSON.stringify(opts.body):undefined});
   if(!r.ok){const e=await r.text();throw new Error(e||'API error '+r.status);}
@@ -617,8 +617,8 @@ function updateTrialBanner(){
 
 async function loadSpotCount(){
   try{
-    const rows=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)&select=id'});
-    const remaining=25-(rows?rows.length:0);
+    const activeCount=await sb('POST','rpc/ct_count_active_professionals',{body:{}});
+    const remaining=25-(activeCount||0);
     const banner=document.getElementById('spot-banner');
     if(remaining<=10&&remaining>0){banner.style.display='block';document.getElementById('spot-text').textContent='🔥 Only '+remaining+' of 25 FREE spots remaining!';}
     else if(remaining<=0){
@@ -641,15 +641,15 @@ async function submitReg(){
   if(mobile.length!==10||!/^\d{10}$/.test(mobile))return(e.textContent='Enter valid 10 digit mobile.');
   try{
     e.textContent='Registering…';
-    const existing=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&select=id'});
+    const existing=await sb('POST','rpc/ct_find_professional_by_mobile',{body:{p_mobile:mobile}});
     if(existing&&existing.length){
       e.className='err-msg err-green';e.textContent='Already registered! Please login.';
       setTimeout(()=>{showLogin();document.getElementById('login-mobile').value=mobile;},1500);return;
     }
-    const active=await sb('GET','professionals',{filter:'is_waitlist=eq.false&status=in.(trial,approved)&select=id'});
-    if((active?active.length:0)>=25){submitWaitlist();return;}
+    const activeCount=await sb('POST','rpc/ct_count_active_professionals',{body:{}});
+    if((activeCount||0)>=25){submitWaitlist();return;}
     // v8: trial_started_at = null — will be set on first visit
-    const res=await sb('POST','professionals',{body:{name,mobile,city,profession,status:'trial',trial_started_at:null,last_activity_at:null,is_waitlist:false}});
+    const res=await sb('POST','professionals',{select:'id,name,mobile,city,profession,access_code,status,created_at,trial_started_at,last_activity_at,is_waitlist,trial_extended_days,is_blocked,has_pin',body:{name,mobile,city,profession,status:'trial',trial_started_at:null,last_activity_at:null,is_waitlist:false}});
     pro=res[0];
     tg('🆕 <b>New ConsulTrack Signup</b>\n\nName: '+name+'\nMobile: '+mobile+'\nCity: '+(city||'—')+'\nProfession: '+(profession||'—'));
     e.className='err-msg err-green';e.textContent='✓ Registered! Setting up your PIN…';
@@ -666,7 +666,7 @@ async function submitWaitlist(){
   if(!name||!mobile)return(e.textContent='Name and mobile required.');
   try{
     e.textContent='Adding to waitlist…';
-    await sb('POST','professionals',{body:{name,mobile,city,profession,status:'waitlist',is_waitlist:true}});
+    await sb('POST','professionals',{select:'id',body:{name,mobile,city,profession,status:'waitlist',is_waitlist:true}});
     e.className='err-msg err-green';e.textContent='✓ Added to waitlist!';
   }catch(err){e.textContent='Error: '+err.message;}
 }
@@ -677,8 +677,8 @@ async function verifyMobile(){
   if(!mobile||mobile.length!==10)return(e.textContent='Enter valid 10 digit mobile.');
   try{
     e.textContent='Verifying…';
-    const rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)&select=id,name,mobile,city,profession,access_code,status,created_at,trial_started_at,last_activity_at,is_waitlist,trial_extended_days,is_blocked,has_pin'});
-    if(!rows||!rows.length)return(e.textContent='Mobile not registered or access blocked.');
+    const rows=await sb('POST','rpc/ct_find_professional_by_mobile',{body:{p_mobile:mobile}});
+    if(!rows||!rows.length||!['trial','approved'].includes(rows[0].status))return(e.textContent='Mobile not registered or access blocked.');
     pro=rows[0];
     if(pro.has_pin){localStorage.setItem('ct_session',JSON.stringify({pro}));document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');}
     else{document.getElementById('login-s1').style.display='none';document.getElementById('login-s2').style.display='block';}
@@ -693,8 +693,9 @@ async function setPin(){
   const e=document.getElementById('pin-err');
   if(p1.length!==4||!/^\d{4}$/.test(p1))return(e.textContent='PIN must be 4 digits');
   if(p1!==p2)return(e.textContent='PINs do not match');
-  await sb('POST','rpc/ct_set_pin',{body:{p_id:pro.id,p_pin:p1}});
-  pro.has_pin=true;localStorage.setItem('ct_session',JSON.stringify({pro}));
+  const token=await sb('POST','rpc/ct_set_pin',{body:{p_id:pro.id,p_pin:p1}});
+  if(!token){e.textContent='Could not set PIN — this account already has one. Use Forgot PIN instead.';return;}
+  pro.has_pin=true;pro.session_token=token;localStorage.setItem('ct_session',JSON.stringify({pro}));
   checkTrialAndEnter();
 }
 
@@ -702,8 +703,8 @@ async function checkPin(){
   const val=document.getElementById('pin-entry').value;
   const e=document.getElementById('pin-entry-err');
   try{
-    const ok=await sb('POST','rpc/ct_verify_pin',{body:{p_id:pro.id,p_pin:val}});
-    if(ok){checkTrialAndEnter();}
+    const token=await sb('POST','rpc/ct_verify_pin',{body:{p_id:pro.id,p_pin:val}});
+    if(token){pro.session_token=token;localStorage.setItem('ct_session',JSON.stringify({pro}));checkTrialAndEnter();}
     else{e.textContent='Incorrect PIN';document.getElementById('pin-entry').value='';}
   }catch(err){e.textContent='Error: '+err.message;}
 }
@@ -735,16 +736,16 @@ async function verifyForgotPin(){
   if(!mobile||mobile.length!==10){msg.textContent='Enter valid 10 digit mobile.';msg.style.color='#D32F2F';msg.style.display='block';return;}
   msg.textContent='Checking...';msg.style.color='#666';msg.style.display='block';
   try{
-    var rows=await sb('GET','professionals',{filter:'mobile=eq.'+mobile+'&status=in.(trial,approved)&select=id,name,mobile,city'});
-    if(!rows||!rows.length){msg.textContent='Mobile not registered or access blocked.';msg.style.color='#D32F2F';return;}
+    var rows=await sb('POST','rpc/ct_find_professional_by_mobile',{body:{p_mobile:mobile}});
+    if(!rows||!rows.length||!['trial','approved'].includes(rows[0].status)){msg.textContent='Mobile not registered or access blocked.';msg.style.color='#D32F2F';return;}
     var p=rows[0];
     await tg('🔑 PIN Reset Requested\n\nName: '+p.name+'\nMobile: '+p.mobile+'\nCity: '+(p.city||'-')+'\n\nVerify their identity, then reset their PIN from the ConsulTrack Admin Panel.');
     msg.textContent='✓ Request received. We will verify your identity and reset your PIN shortly — you will be contacted on WhatsApp.';
     msg.style.color='#2f855a';
   }catch(err){msg.textContent='Error: '+err.message;msg.style.color='#D32F2F';}
 }
-function resetApp(){
-  if(!confirm('Log out?'))return;
+function resetApp(skipConfirm){
+  if(!skipConfirm&&!confirm('Log out?'))return;
   localStorage.removeItem('ct_session');pro=null;
   DB={centres:[],services:[],visits:[],visitLines:[]};
   showScreen('screen-register');
@@ -761,21 +762,29 @@ async function syncAll(){
   setSyncBadge('busy');
   try{
     // Refresh pro data — picks up admin trial extensions / blocks
-    const fp=await sb('GET','professionals',{filter:'id=eq.'+pro.id+'&select=id,name,mobile,city,profession,access_code,status,created_at,trial_started_at,last_activity_at,is_waitlist,trial_extended_days,is_blocked,has_pin'});
+    const fp=await sb('POST','rpc/ct_get_professional',{body:{p_token:pro.session_token}});
     if(fp&&fp.length){
-      pro=fp[0];localStorage.setItem('ct_session',JSON.stringify({pro}));
+      const token=pro.session_token;
+      pro=fp[0];pro.session_token=token;localStorage.setItem('ct_session',JSON.stringify({pro}));
       if(pro.status==='blocked'||pro.is_blocked){checkTrialAndEnter();return;}
       if(pro.trial_started_at&&trialDaysLeft(pro)<=0){checkTrialAndEnter();return;}
       updateTrialBanner();
     }
-    const pid=pro.id,f='pro_id=eq.'+pid;
-    const c =await sb('GET','centres',{filter:f,order:'name.asc'});
-    const sv=await sb('GET','subservices',{filter:f,order:'service_name.asc,name.asc'});
-    const v =await sb('GET','visits',{filter:f,order:'visit_date.desc'});
-    const vl=await sb('GET','visit_lines',{filter:'pro_id=eq.'+pid,order:'created_at.asc'});
+    const c =await sb('POST','rpc/ct_get_centres',{body:{p_token:pro.session_token}});
+    const sv=await sb('POST','rpc/ct_get_subservices',{body:{p_token:pro.session_token}});
+    const v =await sb('POST','rpc/ct_get_visits',{body:{p_token:pro.session_token}});
+    const vl=await sb('POST','rpc/ct_get_visit_lines',{body:{p_token:pro.session_token}});
     DB.centres=c||[];DB.services=sv||[];DB.visits=v||[];DB.visitLines=vl||[];
     setSyncBadge('ok');refreshAll();
-  }catch(e){setSyncBadge('err');toast('Sync failed: '+e.message);}
+  }catch(e){
+    setSyncBadge('err');
+    if(/session/i.test(e.message)){
+      toast('Session expired — please log in again');
+      resetApp(true);
+    } else {
+      toast('Sync failed: '+e.message);
+    }
+  }
 }
 
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
@@ -939,38 +948,22 @@ async function saveVisit(){
   const total=visitLines.reduce((a,l)=>a+l.amount,0);
   const recd=status==='pending'?0:(parseFloat(document.getElementById('v-recd').value)||0);
   const finalStatus=recd>=total&&total>0?'paid':recd>0?'partial':'pending';
-  const body={pro_id:pro.id,centre_id:centreId,centre_name:centre.name,visit_date:date,
-    total_amount:total,received:recd,payment_mode:document.getElementById('v-mode').value,
-    receipt_date:document.getElementById('v-rcpt-date').value||null,
-    payment_type:document.getElementById('v-pay-type').value,
-    status:finalStatus,notes:document.getElementById('v-notes').value};
+  const wasFirstVisit=!editVisitId&&!pro.trial_started_at;
   try{
-    let vid;
-    if(editVisitId){
-      await sb('PATCH','visits?id=eq.'+editVisitId,{body});
-      await sb('DELETE','visit_lines?visit_id=eq.'+editVisitId);
-      vid=editVisitId;
-    } else {
-      const r=await sb('POST','visits',{body});vid=r[0].id;
-      // v8 KEY: set trial_started_at on FIRST visit, update last_activity_at on every visit
-      const now=new Date().toISOString();
-      if(!pro.trial_started_at){
-        await sb('PATCH','professionals?id=eq.'+pro.id,{body:{trial_started_at:now,last_activity_at:now}});
-        pro.trial_started_at=now;pro.last_activity_at=now;
-        localStorage.setItem('ct_session',JSON.stringify({pro}));
-        updateTrialBanner();
-        toast('🎉 30-day trial started!');
-      } else {
-        await sb('PATCH','professionals?id=eq.'+pro.id,{body:{last_activity_at:now}});
-        pro.last_activity_at=now;
-        localStorage.setItem('ct_session',JSON.stringify({pro}));
-        toast('Visit saved ✓');
-      }
-    }
-    await sb('POST','visit_lines',{body:visitLines.map(l=>({visit_id:vid,pro_id:pro.id,service_name:l.service_name,subservice_name:l.subservice_name,rate:l.rate,qty:l.qty,amount:l.amount}))});
+    await sb('POST','rpc/ct_save_visit',{body:{
+      p_token:pro.session_token,p_visit_id:editVisitId||null,p_centre_id:centreId,p_centre_name:centre.name,
+      p_visit_date:date,p_total_amount:total,p_received:recd,
+      p_payment_mode:document.getElementById('v-mode').value,
+      p_receipt_date:document.getElementById('v-rcpt-date').value||null,
+      p_payment_type:document.getElementById('v-pay-type').value,
+      p_status:finalStatus,p_notes:document.getElementById('v-notes').value,
+      p_lines:visitLines.map(l=>({service_name:l.service_name,subservice_name:l.subservice_name,rate:l.rate,qty:l.qty,amount:l.amount}))
+    }});
     closeModal('visit-modal');
     if(editVisitId)toast('Visit updated ✓');
     await syncAll();
+    if(wasFirstVisit)toast('🎉 30-day trial started!');
+    else if(!editVisitId)toast('Visit saved ✓');
   }catch(e){errEl.textContent='Error: '+e.message;}
 }
 
@@ -992,7 +985,7 @@ async function openEditVisit(id){
   renderLines();openModal('visit-modal');
 }
 
-async function deleteVisit(id){if(!confirm('Delete this visit?'))return;await sb('DELETE','visits?id=eq.'+id);toast('Deleted');await syncAll();}
+async function deleteVisit(id){if(!confirm('Delete this visit?'))return;await sb('POST','rpc/ct_delete_visit',{body:{p_token:pro.session_token,p_visit_id:id}});toast('Deleted');await syncAll();}
 
 function openPayment(id){
   payVisitId=id;const v=DB.visits.find(x=>x.id===id);const due=(v.total_amount||0)-(v.received||0);
@@ -1010,7 +1003,7 @@ async function savePayment(){
   const newRecd=Math.min((v.received||0)+amount,v.total_amount||0);
   const newStatus=newRecd>=(v.total_amount||0)?'paid':'partial';
   try{
-    await sb('PATCH','visits?id=eq.'+payVisitId,{body:{received:newRecd,payment_mode:document.getElementById('p-mode').value,receipt_date:document.getElementById('p-rcpt-date').value||null,status:newStatus}});
+    await sb('POST','rpc/ct_record_payment',{body:{p_token:pro.session_token,p_visit_id:payVisitId,p_received:newRecd,p_payment_mode:document.getElementById('p-mode').value,p_receipt_date:document.getElementById('p-rcpt-date').value||null,p_status:newStatus}});
     closeModal('pay-modal');toast('Payment recorded ✓');await syncAll();
   }catch(e){document.getElementById('pay-err').textContent='Error: '+e.message;}
 }
@@ -1055,7 +1048,7 @@ async function saveDuesPayment(vid){
   if(!amount)return toast('Enter amount');
   const newRecd=Math.min((v.received||0)+amount,v.total_amount||0);
   const newStatus=newRecd>=(v.total_amount||0)?'paid':'partial';
-  await sb('PATCH','visits?id=eq.'+vid,{body:{received:newRecd,payment_mode:mode,receipt_date:rcptDate||null,status:newStatus}});
+  await sb('POST','rpc/ct_record_payment',{body:{p_token:pro.session_token,p_visit_id:vid,p_received:newRecd,p_payment_mode:mode,p_receipt_date:rcptDate||null,p_status:newStatus}});
   toast('Payment saved ✓');await syncAll();
 }
 
@@ -1261,7 +1254,7 @@ async function saveCentreEdit(id){
   const email=document.getElementById('ce-email-'+id).value.trim();
   if(!name)return toast('Name required');
   const wa=phone?'91'+phone.replace(/\D/g,'').slice(-10):null;
-  await sb('PATCH','centres?id=eq.'+id,{body:{name,phone:phone||null,email:email||null,whatsapp_number:wa}});
+  await sb('POST','rpc/ct_update_centre',{body:{p_token:pro.session_token,p_id:id,p_name:name,p_phone:phone||null,p_email:email||null,p_whatsapp_number:wa}});
   toast('Centre updated ✓');await syncAll();
 }
 
@@ -1270,7 +1263,7 @@ async function saveServiceEdit(id){
   const sub=document.getElementById('se-sub-'+id).value.trim();
   const rate=parseFloat(document.getElementById('se-rate-'+id).value)||0;
   if(!type)return toast('Type required');
-  await sb('PATCH','subservices?id=eq.'+id,{body:{service_name:type,name:sub||'',rate}});
+  await sb('POST','rpc/ct_update_subservice',{body:{p_token:pro.session_token,p_id:id,p_service_name:type,p_name:sub||'',p_rate:rate}});
   toast('Service updated ✓');await syncAll();
 }
 
@@ -1280,23 +1273,23 @@ async function addCentre(){
   const email=document.getElementById('nc-email').value.trim();
   if(!name)return toast('Enter centre name');
   const wa=phone?'91'+phone.replace(/\D/g,'').slice(-10):null;
-  await sb('POST','centres',{body:{pro_id:pro.id,name,phone:phone||null,email:email||null,whatsapp_number:wa}});
+  await sb('POST','rpc/ct_add_centre',{body:{p_token:pro.session_token,p_name:name,p_phone:phone||null,p_email:email||null,p_whatsapp_number:wa}});
   ['nc-name','nc-phone','nc-email'].forEach(id=>document.getElementById(id).value='');
   toast('Centre added ✓');await syncAll();
 }
-async function delCentre(id){if(!confirm('Delete?'))return;await sb('DELETE','centres?id=eq.'+id);toast('Deleted');await syncAll();}
+async function delCentre(id){if(!confirm('Delete?'))return;await sb('POST','rpc/ct_delete_centre',{body:{p_token:pro.session_token,p_id:id}});toast('Deleted');await syncAll();}
 
 async function addService(){
   const type=document.getElementById('ns-type').value.trim();
   const sub=document.getElementById('ns-sub').value.trim();
   const rate=parseFloat(document.getElementById('ns-rate').value)||0;
   if(!type)return toast('Enter service type');
-  await sb('POST','subservices',{body:{pro_id:pro.id,service_id:null,service_name:type,name:sub||'',rate}});
+  await sb('POST','rpc/ct_add_subservice',{body:{p_token:pro.session_token,p_service_name:type,p_name:sub||'',p_rate:rate}});
   ['ns-type','ns-sub','ns-rate'].forEach(id=>document.getElementById(id).value='');
   toast('Service added ✓');await syncAll();
 }
-async function delService(id){if(!confirm('Delete?'))return;await sb('DELETE','subservices?id=eq.'+id);toast('Deleted');await syncAll();}
-async function updateRate(id,rate){await sb('PATCH','subservices?id=eq.'+id,{body:{rate:parseFloat(rate)||0}});toast('Rate updated ✓');}
+async function delService(id){if(!confirm('Delete?'))return;await sb('POST','rpc/ct_delete_subservice',{body:{p_token:pro.session_token,p_id:id}});toast('Deleted');await syncAll();}
+async function updateRate(id,rate){await sb('POST','rpc/ct_update_subservice',{body:{p_token:pro.session_token,p_id:id,p_service_name:DB.services.find(s=>s.id===id)?.service_name||'',p_name:DB.services.find(s=>s.id===id)?.name||'',p_rate:parseFloat(rate)||0}});toast('Rate updated ✓');}
 
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',ev=>{if(ev.target===o)o.classList.remove('open');}));
 </script>
