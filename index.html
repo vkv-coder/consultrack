@@ -213,7 +213,22 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
       <div style="text-align:center;margin-top:10px;">
         <span style="font-size:0.75rem;color:var(--muted);cursor:pointer;" onclick="showOverlayScreen('screen-privacy')">🔒 Privacy Policy</span>
         &nbsp;·&nbsp;
-        <a href="mailto:vkvcoder.support@gmail.com" style="font-size:0.75rem;color:var(--muted);">Support</a>
+        <a href="mailto:vkvcoder.support@gmail.com" onclick="copyEmailFallback('vkvcoder.support@gmail.com')" style="font-size:0.75rem;color:var(--muted);">Support</a>
+      </div>
+    </div>
+
+    <div class="setup-card" style="margin-top:12px;">
+      <div style="background:#FFF3E0;color:#E65100;font-weight:800;font-size:0.72rem;text-align:center;padding:6px;border-radius:6px;margin-bottom:12px;">🧪 Just looking? See a full sample dashboard</div>
+      <button class="btn btn-primary" style="width:100%;" onclick="tryDemoLogin()">Try Demo Dashboard</button>
+      <div style="text-align:center;margin-top:10px;">
+        <span style="font-size:0.75rem;color:var(--navy);cursor:pointer;font-weight:700;" onclick="toggleHowItWorks()">❓ How does this work? <span id="hiw-arrow" style="display:inline-block;transition:transform .2s;">▾</span></span>
+      </div>
+      <div id="hiw-body" style="display:none;font-size:0.78rem;color:var(--muted);line-height:1.7;margin-top:10px;text-align:left;">
+        <b>1. Register instantly</b> — no approval needed, your 30-day free trial starts the moment you log your first visit.<br>
+        <b>2. Set a 4-digit PIN</b> — no password to remember, just your mobile number + PIN each time.<br>
+        <b>3. Track your fee visits</b> — record each patient visit, which centre, which services, and payment status, across all your practice locations.<br>
+        <b>4. See reports & dues instantly</b> — daily/date-range totals and outstanding payments, all in one place.<br><br>
+        Questions? Contact <a href="mailto:vkvcoder.support@gmail.com" onclick="copyEmailFallback('vkvcoder.support@gmail.com')" style="color:var(--navy);font-weight:700;">vkvcoder.support@gmail.com</a>
       </div>
     </div>
   </div>
@@ -285,7 +300,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
       <a href="https://wa.me/919327243611?text=Hi%2C%20I%20want%20to%20continue%20ConsulTrack%20after%20my%20trial" target="_blank" style="text-decoration:none;">
         <button class="btn btn-wa" style="width:100%;padding:14px;">📲 WhatsApp Support</button>
       </a>
-      <a href="mailto:vkvcoder.support@gmail.com" style="text-decoration:none;">
+      <a href="mailto:vkvcoder.support@gmail.com" onclick="copyEmailFallback('vkvcoder.support@gmail.com')" style="text-decoration:none;">
         <button class="btn btn-ghost" style="width:100%;padding:14px;">📧 Email Support</button>
       </a>
       <button class="btn btn-ghost" style="padding:14px;" onclick="resetApp()">⎋ Logout</button>
@@ -312,7 +327,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
     </div></div>
     <div class="pp-card"><h3>Data Storage</h3><p>Your data is stored with AES-256 encryption on Supabase servers. Only you can access your data.</p></div>
     <div class="pp-card"><h3>What We Store</h3><p>• Your name and mobile — for access only<br>• Fee data YOU enter — for YOUR access only<br>• Your PIN — stored as a hash, we cannot read it</p></div>
-    <div class="pp-card"><h3>Your Rights</h3><p>• Export as Excel/PDF anytime<br>• Request deletion anytime<br><br>Contact: <a href="mailto:vkvcoder.support@gmail.com" style="color:var(--navy);font-weight:700;">vkvcoder.support@gmail.com</a></p></div>
+    <div class="pp-card"><h3>Your Rights</h3><p>• Export as Excel/PDF anytime<br>• Request deletion anytime<br><br>Contact: <a href="mailto:vkvcoder.support@gmail.com" onclick="copyEmailFallback('vkvcoder.support@gmail.com')" style="color:var(--navy);font-weight:700;">vkvcoder.support@gmail.com</a></p></div>
     <div class="pp-card"><h3>Security</h3><p>AES-256 at rest · TLS 1.3 in transit · No third party tracking<div style="font-size:0.73rem;color:var(--muted2);margin-top:10px;text-align:right;">Last updated: April 2026</div></p></div>
   </div>
 </div>
@@ -331,7 +346,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
       <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg2);border-radius:12px;margin-bottom:12px;">
         <div style="font-size:1.8rem;">📧</div>
         <div><div style="font-size:0.78rem;color:var(--muted);font-weight:600;">Email</div>
-          <a href="mailto:vkvcoder.support@gmail.com" style="font-size:1rem;font-weight:700;color:var(--navy);text-decoration:none;">vkvcoder.support@gmail.com</a></div>
+          <a href="mailto:vkvcoder.support@gmail.com" onclick="copyEmailFallback('vkvcoder.support@gmail.com')" style="font-size:1rem;font-weight:700;color:var(--navy);text-decoration:none;">vkvcoder.support@gmail.com</a></div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg2);border-radius:12px;">
         <div style="font-size:1.8rem;">📲</div>
@@ -540,6 +555,8 @@ const SB_URL='https://jqqnnkzozjskziaizajg.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxcW5ua3pvempza3ppYWl6YWpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5Mjk1ODAsImV4cCI6MjA4ODUwNTU4MH0.sEYeWnm0dvuw8bLSVnQhqmgV8LB-pELjpuVIa3Us1Gg';
 const SCHEMA='consultrack';
 const TRIAL_DAYS=30;
+const DEMO_PROFESSIONAL_ID='a6123647-a6f4-47e3-936b-10a1af30f4a5';
+const DEMO_PIN='4321';
 async function tg(msg){
   try{await fetch('https://telegram-notify.unigoods2026.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg})});}catch(e){}
 }
@@ -567,8 +584,22 @@ function showOverlayScreen(id){prevScreen=document.querySelector('.screen.active
 function hideOverlayScreen(){showScreen(prevScreen);}
 
 window.onload=async()=>{
+  if(new URLSearchParams(location.search).get('demo')==='1'){await tryDemoLogin();return;}
   const s=localStorage.getItem('ct_session');
-  if(s){pro=JSON.parse(s).pro;document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');}
+  if(s){
+    pro=JSON.parse(s).pro;
+    // Session token already proves who they are - skip re-asking for the PIN.
+    try{
+      const fp=await sb('POST','rpc/ct_get_professional',{body:{p_token:pro.session_token}});
+      if(fp&&fp.length){
+        const token=pro.session_token;
+        pro=fp[0];pro.session_token=token;localStorage.setItem('ct_session',JSON.stringify({pro}));
+        checkTrialAndEnter();return;
+      }
+    }catch(e){}
+    // Session expired/invalid - fall back to PIN entry
+    document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');
+  }
   else{showScreen('screen-register');loadSpotCount();}
 };
 
@@ -685,6 +716,26 @@ async function verifyMobile(){
   }catch(err){e.textContent='Error: '+err.message;}
 }
 
+function toggleHowItWorks(){
+  const body=document.getElementById('hiw-body');
+  const arrow=document.getElementById('hiw-arrow');
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  arrow.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+}
+async function tryDemoLogin(){
+  try{
+    const token=await sb('POST','rpc/ct_verify_pin',{body:{p_id:DEMO_PROFESSIONAL_ID,p_pin:DEMO_PIN}});
+    if(!token){showScreen('screen-register');loadSpotCount();return;}
+    const fp=await sb('POST','rpc/ct_get_professional',{body:{p_token:token}});
+    pro=fp&&fp[0];
+    if(!pro){showScreen('screen-register');loadSpotCount();return;}
+    pro.session_token=token;
+    localStorage.setItem('ct_session',JSON.stringify({pro}));
+    checkTrialAndEnter();
+  }catch(e){showScreen('screen-register');loadSpotCount();}
+}
+
 // ── v8: setPin does NOT set trial_started_at ──
 // v9: PIN is set/verified server-side now (ct_set_pin/ct_verify_pin RPCs) -
 // the client never computes or sees the actual hash.
@@ -788,6 +839,13 @@ async function syncAll(){
 }
 
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+// mailto: links silently do nothing on some devices/PWAs with no mail app configured -
+// this copies the address as a safety net so support is always reachable somehow.
+function copyEmailFallback(email){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(email).then(()=>toast('📋 Email copied: '+email)).catch(()=>{});
+  }
+}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function openModal(id){document.getElementById(id).classList.add('open');}
 function today(){return new Date().toISOString().split('T')[0];}
