@@ -6,6 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1565C0">
+<link rel="manifest" href="manifest.json">
 <title>ConsulTrack</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1350,6 +1351,12 @@ async function delService(id){if(!confirm('Delete?'))return;await sb('POST','rpc
 async function updateRate(id,rate){await sb('POST','rpc/ct_update_subservice',{body:{p_token:pro.session_token,p_id:id,p_service_name:DB.services.find(s=>s.id===id)?.service_name||'',p_name:DB.services.find(s=>s.id===id)?.name||'',p_rate:parseFloat(rate)||0}});toast('Rate updated ✓');}
 
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',ev=>{if(ev.target===o)o.classList.remove('open');}));
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>

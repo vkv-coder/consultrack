@@ -2,7 +2,7 @@
   "name": "ConsulTrack",
   "short_name": "ConsulTrack",
   "description": "Consultation Fee Tracker",
-  "start_url": "/consultrack/,
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#134e4a",
   "theme_color": "#0f766e",
