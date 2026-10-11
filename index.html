@@ -739,7 +739,15 @@ async function enterDemoGated(){
   if(phone.length!==10||!/^\d{10}$/.test(phone)){errEl.textContent='Enter a valid 10-digit phone number.';return;}
   const btn=document.getElementById('demo-btn');
   btn.disabled=true;btn.textContent='Loading...';
-  try{await sb('POST','ct_demo_visitors',{body:{name,phone}});}catch(e){}
+  // Plain fetch, not sb() - sb() always sends Prefer:return=representation,
+  // which makes PostgREST RETURNING the inserted row, and that's blocked by
+  // RLS since there's deliberately no SELECT policy for anon on this table.
+  // return=minimal skips the RETURNING and the insert succeeds.
+  try{
+    await fetch(`${SB_URL}/rest/v1/ct_demo_visitors`,{method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Content-Profile':SCHEMA,'Prefer':'return=minimal'},
+      body:JSON.stringify({name,phone})});
+  }catch(e){}
   tg('🩺 New ConsulTrack demo trial — '+name+' ('+phone+')');
   await tryDemoLogin();
   btn.disabled=false;btn.textContent='Try Demo Dashboard';
