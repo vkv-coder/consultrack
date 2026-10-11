@@ -221,9 +221,12 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
       </div>
     </div>
 
-    <div class="setup-card" style="margin-top:12px;">
+    <div class="setup-card" style="margin-top:12px;" id="demo-card">
       <div style="background:#FFF3E0;color:#E65100;font-weight:800;font-size:0.72rem;text-align:center;padding:6px;border-radius:6px;margin-bottom:12px;">🧪 Just looking? See a full sample dashboard</div>
-      <button class="btn btn-primary" style="width:100%;" onclick="tryDemoLogin()">Try Demo Dashboard</button>
+      <div class="fg"><input type="text" id="demo-name" placeholder="Your name" style="margin-bottom:8px;"></div>
+      <div class="fg"><input type="tel" id="demo-phone" placeholder="10-digit mobile number" maxlength="10" style="margin-bottom:8px;"></div>
+      <button class="btn btn-primary" style="width:100%;" id="demo-btn" onclick="enterDemoGated()">Try Demo Dashboard</button>
+      <div class="err-msg err-red" id="demo-err"></div>
       <div style="text-align:center;margin-top:10px;">
         <span style="font-size:0.75rem;color:var(--navy);cursor:pointer;font-weight:700;" onclick="toggleHowItWorks()">❓ How does this work? <span id="hiw-arrow" style="display:inline-block;transition:transform .2s;">▾</span></span>
       </div>
@@ -588,7 +591,7 @@ function showOverlayScreen(id){prevScreen=document.querySelector('.screen.active
 function hideOverlayScreen(){showScreen(prevScreen);}
 
 window.onload=async()=>{
-  if(new URLSearchParams(location.search).get('demo')==='1'){await tryDemoLogin();return;}
+  if(new URLSearchParams(location.search).get('demo')==='1'){document.getElementById('demo-card')?.scrollIntoView();document.getElementById('demo-name')?.focus();return;}
   const s=localStorage.getItem('ct_session');
   if(s){
     pro=JSON.parse(s).pro;
@@ -726,6 +729,20 @@ function toggleHowItWorks(){
   const open=body.style.display!=='none';
   body.style.display=open?'none':'block';
   arrow.style.transform=open?'rotate(0deg)':'rotate(180deg)';
+}
+async function enterDemoGated(){
+  const name=document.getElementById('demo-name').value.trim();
+  const phone=document.getElementById('demo-phone').value.trim();
+  const errEl=document.getElementById('demo-err');
+  errEl.textContent='';
+  if(!name){errEl.textContent='Please enter your name.';return;}
+  if(phone.length!==10||!/^\d{10}$/.test(phone)){errEl.textContent='Enter a valid 10-digit phone number.';return;}
+  const btn=document.getElementById('demo-btn');
+  btn.disabled=true;btn.textContent='Loading...';
+  try{await sb('POST','ct_demo_visitors',{body:{name,phone}});}catch(e){}
+  tg('🩺 New ConsulTrack demo trial — '+name+' ('+phone+')');
+  await tryDemoLogin();
+  btn.disabled=false;btn.textContent='Try Demo Dashboard';
 }
 async function tryDemoLogin(){
   try{
