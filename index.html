@@ -206,6 +206,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
     <div class="setup-card">
       <h2>🎉 First 25 Doctors — FREE 30-Day Trial!</h2>
       <p>Register instantly. Your 30-day free trial starts when you add your first visit entry.</p>
+      <p style="font-size:0.8rem;color:var(--muted);margin-top:4px;">After your trial: ₹250/month · ₹2,500/year · ₹5,000 one-time (lifetime). <span style="color:var(--navy);cursor:pointer;font-weight:700;" onclick="showOverlayScreen('screen-pricing')">See full pricing →</span></p>
       <div class="fg"><label>Full Name</label><input type="text" id="reg-name" placeholder="Dr. Sharma"></div>
       <div class="fg"><label>Mobile Number</label><input type="tel" id="reg-mobile" placeholder="9876543210" maxlength="10"></div>
       <div class="fg"><label>City</label><input type="text" id="reg-city" placeholder="Vadodara"></div>
@@ -215,6 +216,8 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
       <div class="divider"></div>
       <p style="text-align:center;">Already registered? <span style="color:var(--navy);cursor:pointer;font-weight:700;" onclick="showLogin()">Login →</span></p>
       <div style="text-align:center;margin-top:10px;">
+        <span style="font-size:0.75rem;color:var(--muted);cursor:pointer;" onclick="showOverlayScreen('screen-pricing')">💳 Pricing</span>
+        &nbsp;·&nbsp;
         <span style="font-size:0.75rem;color:var(--muted);cursor:pointer;" onclick="showOverlayScreen('screen-privacy')">🔒 Privacy Policy</span>
         &nbsp;·&nbsp;
         <a href="mailto:vkvcoder.support@gmail.com" onclick="copyEmailFallback('vkvcoder.support@gmail.com')" style="font-size:0.75rem;color:var(--muted);">Support</a>
@@ -368,6 +371,28 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
   </div>
 </div>
 
+<!-- PRICING -->
+<div class="screen" id="screen-pricing">
+  <div style="background:linear-gradient(135deg,var(--navy),var(--navy2));padding:16px 18px;flex-shrink:0;">
+    <button onclick="hideOverlayScreen()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;padding:7px 16px;border-radius:20px;font-size:0.82rem;cursor:pointer;font-weight:700;">← Back</button>
+    <div style="text-align:center;padding:12px 0 6px;">
+      <div style="font-size:3rem;">💳</div>
+      <div style="font-size:1.3rem;font-weight:900;color:#fff;margin-top:8px;">Simple Pricing</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:4px;">ConsulTrack — Pricing &amp; Refunds</div>
+    </div>
+  </div>
+  <div style="flex:1;overflow-y:auto;background:var(--bg);padding-bottom:24px;">
+    <div class="pp-card" style="margin-top:14px;"><h3>Free Trial</h3><p>Every new account gets a <strong>free 30-day trial</strong> — no payment required to start. Your subscription only begins if you choose to continue after the trial.</p></div>
+    <div class="pp-card"><h3>Plans (after your trial)</h3><p>
+      • <strong>Monthly</strong> — ₹250/month<br>
+      • <strong>Yearly</strong> — ₹2,500/year<br>
+      • <strong>Lifetime</strong> — ₹5,000 one-time, no recurring fees
+    </p></div>
+    <div class="pp-card"><h3>Refunds &amp; Cancellation</h3><p>Cancel anytime during your 30-day trial — you are not charged anything. Once your paid subscription has started, you may still cancel anytime to stop future billing, but the fee already paid for the current period is non-refundable once you've used the app to log or bill any patient/client visits during that period.</p></div>
+    <div class="pp-card"><h3>Questions?</h3><p>Contact <a href="mailto:vkvcoder.support@gmail.com" onclick="copyEmailFallback('vkvcoder.support@gmail.com')" style="color:var(--navy);font-weight:700;">vkvcoder.support@gmail.com</a><div style="font-size:0.73rem;color:var(--muted2);margin-top:10px;text-align:right;">Last updated: November 2026</div></p></div>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div class="screen" id="screen-app">
   <div class="trial-banner" id="trial-banner"></div>
@@ -480,6 +505,8 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(21,1
     </div>
   </div>
   <div class="footer-bar">
+    <button class="footer-btn" onclick="showOverlayScreen('screen-pricing')"><span class="fi">💳</span>Pricing</button>
+    <div class="footer-sep"></div>
     <button class="footer-btn" onclick="showOverlayScreen('screen-privacy')"><span class="fi">🔒</span>Privacy</button>
     <div class="footer-sep"></div>
     <button class="footer-btn" onclick="showOverlayScreen('screen-support')"><span class="fi">📧</span>Support</button>
@@ -604,7 +631,12 @@ window.onload=async()=>{
         checkTrialAndEnter();return;
       }
     }catch(e){}
-    // Session expired/invalid - fall back to PIN entry
+    // Session expired/invalid. The demo account's PIN is never shown to the
+    // visitor (it's entered automatically in tryDemoLogin), so a demo visitor
+    // must never land on the manual PIN-entry screen - just log them back
+    // into the demo silently instead.
+    if(pro.id===DEMO_PROFESSIONAL_ID){localStorage.removeItem('ct_session');await tryDemoLogin();return;}
+    // Real user, real session expired - fall back to PIN entry as before.
     document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');
   }
   else{showScreen('screen-register');loadSpotCount();}
