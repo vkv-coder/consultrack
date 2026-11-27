@@ -622,6 +622,15 @@ window.onload=async()=>{
   const s=localStorage.getItem('ct_session');
   if(s){
     pro=JSON.parse(s).pro;
+    // The demo account must never auto-resume on a bare visit (no ?demo=1)
+    // - only the explicit Try Demo flow above should ever enter it. Without
+    // this, any device that tried the demo once would keep landing straight
+    // in the demo dashboard on every later visit to the plain production
+    // URL, and a genuinely new visitor could never see the real homepage.
+    if(pro.id===DEMO_PROFESSIONAL_ID){
+      localStorage.removeItem('ct_session');
+      showScreen('screen-register');loadSpotCount();return;
+    }
     // Session token already proves who they are - skip re-asking for the PIN.
     try{
       const fp=await sb('POST','rpc/ct_get_professional',{body:{p_token:pro.session_token}});
@@ -631,12 +640,7 @@ window.onload=async()=>{
         checkTrialAndEnter();return;
       }
     }catch(e){}
-    // Session expired/invalid. The demo account's PIN is never shown to the
-    // visitor (it's entered automatically in tryDemoLogin), so a demo visitor
-    // must never land on the manual PIN-entry screen - just log them back
-    // into the demo silently instead.
-    if(pro.id===DEMO_PROFESSIONAL_ID){localStorage.removeItem('ct_session');await tryDemoLogin();return;}
-    // Real user, real session expired - fall back to PIN entry as before.
+    // Session expired/invalid (real user only - demo is handled above).
     document.getElementById('pin-welcome').textContent='Welcome, '+pro.name;showScreen('screen-pin');
   }
   else{showScreen('screen-register');loadSpotCount();}
